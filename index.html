@@ -189,8 +189,9 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        // ===== ITEMS =====
+        // ===== ITEMS (100 toys!) =====
         const ITEMS = [
+            // Original items
             { hebrew: "כדור",     emoji: "⚽" },
             { hebrew: "ספר",      emoji: "📖" },
             { hebrew: "כוס",      emoji: "🥤" },
@@ -211,11 +212,97 @@
             { hebrew: "פרח",      emoji: "🌸" },
             { hebrew: "דג",       emoji: "🐟" },
             { hebrew: "לב",       emoji: "❤️" },
+            // Toys
+            { hebrew: "רובוט",    emoji: "🤖" },
+            { hebrew: "דובי",     emoji: "🧸" },
+            { hebrew: "רכבת",     emoji: "🚂" },
+            { hebrew: "מכונית",   emoji: "🚗" },
+            { hebrew: "כתר",      emoji: "👑" },
+            { hebrew: "חרב",      emoji: "🗡️" },
+            { hebrew: "מגן",      emoji: "🛡️" },
+            { hebrew: "חללית",    emoji: "🚀" },
+            { hebrew: "תוף",      emoji: "🥁" },
+            { hebrew: "גיטרה",    emoji: "🎸" },
+            { hebrew: "קשת",      emoji: "🏹" },
+            { hebrew: "כדורסל",   emoji: "🏀" },
+            { hebrew: "אופניים",  emoji: "🚲" },
+            { hebrew: "מטוס",     emoji: "✈️" },
+            { hebrew: "ספינה",    emoji: "🚢" },
+            // Animals
+            { hebrew: "ארנב",     emoji: "🐰" },
+            { hebrew: "חתול",     emoji: "🐱" },
+            { hebrew: "כלב",      emoji: "🐶" },
+            { hebrew: "פרפר",     emoji: "🦋" },
+            { hebrew: "ינשוף",    emoji: "🦉" },
+            { hebrew: "דינוזאור", emoji: "🦕" },
+            { hebrew: "נחש",      emoji: "🐍" },
+            { hebrew: "צפרדע",    emoji: "🐸" },
+            { hebrew: "דבורה",    emoji: "🐝" },
+            { hebrew: "פינגווין", emoji: "🐧" },
+            { hebrew: "סוס",      emoji: "🐴" },
+            { hebrew: "עכביש",    emoji: "🕷️" },
+            { hebrew: "תמנון",    emoji: "🐙" },
+            { hebrew: "לוויתן",   emoji: "🐋" },
+            { hebrew: "נמר",      emoji: "🐆" },
+            // Food
+            { hebrew: "בננה",     emoji: "🍌" },
+            { hebrew: "ענבים",    emoji: "🍇" },
+            { hebrew: "אבטיח",    emoji: "🍉" },
+            { hebrew: "פיצה",     emoji: "🍕" },
+            { hebrew: "גלידה",    emoji: "🍦" },
+            { hebrew: "סופגנייה", emoji: "🍩" },
+            { hebrew: "שוקולד",   emoji: "🍫" },
+            { hebrew: "עוגייה",   emoji: "🍪" },
+            { hebrew: "תות",      emoji: "🍓" },
+            { hebrew: "לימון",    emoji: "🍋" },
+            { hebrew: "דובדבן",   emoji: "🍒" },
+            { hebrew: "אגס",      emoji: "🍐" },
+            { hebrew: "תירס",     emoji: "🌽" },
+            { hebrew: "גזר",      emoji: "🥕" },
+            { hebrew: "פטריה",    emoji: "🍄" },
+            // Objects
+            { hebrew: "מצלמה",    emoji: "📷" },
+            { hebrew: "משקפיים",  emoji: "👓" },
+            { hebrew: "מטריה",    emoji: "🌂" },
+            { hebrew: "פנס",      emoji: "🔦" },
+            { hebrew: "מגנט",     emoji: "🧲" },
+            { hebrew: "פטיש",     emoji: "🔨" },
+            { hebrew: "מברג",     emoji: "🪛" },
+            { hebrew: "מנעול",    emoji: "🔒" },
+            { hebrew: "פעמון",    emoji: "🔔" },
+            { hebrew: "כוכב",     emoji: "⭐" },
+            { hebrew: "ירח",      emoji: "🌙" },
+            { hebrew: "שמש",      emoji: "☀️" },
+            { hebrew: "ענן",      emoji: "☁️" },
+            { hebrew: "קשת בענן", emoji: "🌈" },
+            { hebrew: "אש",       emoji: "🔥" },
+            { hebrew: "יהלום",    emoji: "💎" },
+            { hebrew: "בלון",     emoji: "🎈" },
+            { hebrew: "מתנה",     emoji: "🎁" },
+            { hebrew: "קוביה",    emoji: "🎲" },
+            { hebrew: "מפה",      emoji: "🗺️" },
+            { hebrew: "שעון חול", emoji: "⏳" },
+            { hebrew: "טלסקופ",   emoji: "🔭" },
+            { hebrew: "מיקרוסקופ",emoji: "🔬" },
+            { hebrew: "גביע",     emoji: "🏆" },
+            { hebrew: "מדליה",    emoji: "🏅" },
+            // Music & Art
+            { hebrew: "פסנתר",    emoji: "🎹" },
+            { hebrew: "חצוצרה",   emoji: "🎺" },
+            { hebrew: "כינור",    emoji: "🎻" },
+            { hebrew: "פלטה",     emoji: "🎨" },
+            { hebrew: "קלטת",     emoji: "📼" },
+            { hebrew: "רדיו",     emoji: "📻" },
+            // Nature
+            { hebrew: "עץ",       emoji: "🌳" },
+            { hebrew: "קקטוס",    emoji: "🌵" },
+            { hebrew: "פטל",      emoji: "🌹" },
+            { hebrew: "חמנייה",   emoji: "🌻" },
         ];
 
         // ===== CONFIG =====
         const ROOM_SIZE = 8;
-        const OBJECTS_PER_ROUND = 7;
+        const OBJECTS_PER_ROUND = 30;
         const TONGUE_SPEED = 0.06;
         const TONGUE_RETRACT_SPEED = 0.08;
 
@@ -384,17 +471,48 @@
                 scene.add(leg);
             });
 
-            // Shelf on right wall
+            // Shelves on right wall
             const shelfMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
-            const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 2.5), shelfMat);
-            shelf.position.set(ROOM_SIZE - 0.15, 2.2, -1);
+            const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3.5), shelfMat);
+            shelf.position.set(ROOM_SIZE - 0.15, 2.2, -0.5);
             shelf.castShadow = true;
             scene.add(shelf);
 
-            const shelf2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 2), shelfMat);
+            const shelf2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3), shelfMat);
             shelf2.position.set(ROOM_SIZE - 0.15, 3.2, 1);
             shelf2.castShadow = true;
             scene.add(shelf2);
+
+            // Shelves on left wall
+            const shelfL1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3.5), shelfMat);
+            shelfL1.position.set(-ROOM_SIZE + 0.15, 2.0, -0.5);
+            shelfL1.castShadow = true;
+            scene.add(shelfL1);
+
+            const shelfL2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3), shelfMat);
+            shelfL2.position.set(-ROOM_SIZE + 0.15, 3.0, 0.5);
+            shelfL2.castShadow = true;
+            scene.add(shelfL2);
+
+            // Shelf on back wall (high)
+            const shelfBack = new THREE.Mesh(new THREE.BoxGeometry(7, 0.08, 0.3), shelfMat);
+            shelfBack.position.set(0, 3.3, -ROOM_SIZE + 0.2);
+            shelfBack.castShadow = true;
+            scene.add(shelfBack);
+
+            // Small cabinet on back wall
+            const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+            const cabinet = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 0.8), cabinetMat);
+            cabinet.position.set(5, 1, -ROOM_SIZE + 0.5);
+            cabinet.castShadow = true;
+            cabinet.receiveShadow = true;
+            scene.add(cabinet);
+
+            // Second small table on the right side
+            const table2Top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.08, 1.2), tableMat);
+            table2Top.position.set(4, 0.9, 2);
+            table2Top.castShadow = true;
+            scene.add(table2Top);
         }
 
         // ===== EMOJI SPRITES =====
@@ -422,32 +540,73 @@
                 depthWrite: false,
             });
             const sprite = new THREE.Sprite(material);
-            sprite.scale.set(1.2, 1.2, 1);
+            sprite.scale.set(0.85, 0.85, 1);
             sprite.userData = { item };
             return sprite;
         }
 
         // ===== OBJECT PLACEMENT =====
-        // Predefined positions in the room (floor, table, shelves)
+        // Many positions across the entire room for maximum chaos
         const POSITIONS = [
-            // Floor positions
-            { x: -1, y: 0.6, z: -1 },
-            { x: 1.5, y: 0.6, z: -2 },
-            { x: 0, y: 0.6, z: 1 },
-            { x: -3, y: 0.6, z: 1.5 },
-            { x: 3, y: 0.6, z: 0 },
-            { x: -1.5, y: 0.6, z: 3 },
-            { x: 2, y: 0.6, z: 2.5 },
-            { x: -4, y: 0.6, z: -3 },
+            // Floor - spread everywhere
+            { x: -1, y: 0.5, z: -1 },
+            { x: 1.5, y: 0.5, z: -2 },
+            { x: 0, y: 0.5, z: 1 },
+            { x: -3, y: 0.5, z: 1.5 },
+            { x: 3, y: 0.5, z: 0 },
+            { x: -1.5, y: 0.5, z: 3 },
+            { x: 2, y: 0.5, z: 2.5 },
+            { x: -4, y: 0.5, z: -3 },
+            { x: 0.5, y: 0.5, z: -4 },
+            { x: -5, y: 0.5, z: 0 },
+            { x: 4.5, y: 0.5, z: -1 },
+            { x: -2, y: 0.5, z: -5 },
+            { x: 3.5, y: 0.5, z: 3.5 },
+            { x: -4.5, y: 0.5, z: 3 },
+            { x: 5, y: 0.5, z: 2 },
+            { x: -6, y: 0.5, z: -2 },
+            { x: 1, y: 0.5, z: -6 },
+            { x: -3.5, y: 0.5, z: -6 },
+            { x: 6, y: 0.5, z: -4 },
+            { x: -1, y: 0.5, z: 5 },
             // Table positions
-            { x: -3.2, y: 1.9, z: -2 },
-            { x: -2.5, y: 1.9, z: -1.8 },
-            { x: -1.8, y: 1.9, z: -2.2 },
-            // Right shelf positions
-            { x: ROOM_SIZE - 0.6, y: 2.8, z: -1.5 },
-            { x: ROOM_SIZE - 0.6, y: 2.8, z: -0.5 },
-            { x: ROOM_SIZE - 0.6, y: 3.8, z: 0.5 },
-            { x: ROOM_SIZE - 0.6, y: 3.8, z: 1.5 },
+            { x: -3.5, y: 1.85, z: -2.3 },
+            { x: -2.8, y: 1.85, z: -1.7 },
+            { x: -2.0, y: 1.85, z: -2.1 },
+            { x: -3.0, y: 1.85, z: -2.5 },
+            { x: -1.5, y: 1.85, z: -1.9 },
+            // Right wall shelves
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: -1.8 },
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: -0.8 },
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: 0.0 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 0.3 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 1.2 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 1.8 },
+            // Left wall shelves
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: -2 },
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: -0.5 },
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: 1 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: -1 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: 0.5 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: 2 },
+            // Back wall shelves (high up)
+            { x: -3, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: -1.5, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: 1.5, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: 3, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: -4.5, y: 2.2, z: -ROOM_SIZE + 0.6 },
+            { x: 4.5, y: 2.2, z: -ROOM_SIZE + 0.6 },
+            // Corners and hidden spots
+            { x: -ROOM_SIZE + 1, y: 0.5, z: -ROOM_SIZE + 1 },
+            { x: ROOM_SIZE - 1, y: 0.5, z: -ROOM_SIZE + 1 },
+            { x: -ROOM_SIZE + 1, y: 0.5, z: ROOM_SIZE - 2 },
+            { x: ROOM_SIZE - 1, y: 0.5, z: ROOM_SIZE - 2 },
+            // High floating positions (hanging from ceiling)
+            { x: 0, y: 5.5, z: 0 },
+            { x: -3, y: 5, z: -3 },
+            { x: 3, y: 5.2, z: 2 },
+            { x: -2, y: 4.5, z: 3 },
+            { x: 4, y: 4.8, z: -2 },
         ];
 
         function shuffle(arr) {
