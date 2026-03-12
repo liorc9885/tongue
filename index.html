@@ -141,6 +141,17 @@
             opacity: 0; transition: opacity 0.5s;
         }
         #instructions.visible { opacity: 1; }
+
+        @media (max-width: 600px) {
+            #target-word { font-size: 28px; padding: 8px 20px; margin-top: 8px; }
+            #score-display { font-size: 20px; top: 10px; left: 10px; }
+            #lizard-container { width: 90px; height: 60px; margin-top: 6px; }
+            #lizard-body { width: 75px; height: 42px; }
+            #start-screen h1 { font-size: 40px; }
+            #start-screen .subtitle { font-size: 18px; margin-bottom: 25px; }
+            #start-screen .start-btn { font-size: 22px; padding: 12px 35px; }
+            #instructions { font-size: 11px; bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -298,6 +309,116 @@
             { hebrew: "קקטוס",    emoji: "🌵" },
             { hebrew: "פטל",      emoji: "🌹" },
             { hebrew: "חמנייה",   emoji: "🌻" },
+            // Clothing / בגדים
+            { hebrew: "חולצה",    emoji: "👕" },
+            { hebrew: "מכנסיים",  emoji: "👖" },
+            { hebrew: "שמלה",     emoji: "👗" },
+            { hebrew: "סוודר",    emoji: "🧶" },
+            { hebrew: "מעיל",     emoji: "🧥" },
+            { hebrew: "כפפות",    emoji: "🧤" },
+            { hebrew: "צעיף",     emoji: "🧣" },
+            { hebrew: "חגורה",    emoji: "🪢" },
+            { hebrew: "תיק יד",   emoji: "👜" },
+            { hebrew: "ארנק",     emoji: "👛" },
+            { hebrew: "עניבה",    emoji: "👔" },
+            { hebrew: "סנדל",     emoji: "🩴" },
+            { hebrew: "גרביים",   emoji: "🧦" },
+            { hebrew: "קסדה",     emoji: "⛑️" },
+            { hebrew: "משקפת",    emoji: "🥽" },
+            // Transportation / כלי תחבורה
+            { hebrew: "אוטובוס",  emoji: "🚌" },
+            { hebrew: "משאית",    emoji: "🚛" },
+            { hebrew: "מונית",    emoji: "🚕" },
+            { hebrew: "אופנוע",   emoji: "🏍️" },
+            { hebrew: "קורקינט",  emoji: "🛴" },
+            { hebrew: "כבאית",    emoji: "🚒" },
+            { hebrew: "אמבולנס",  emoji: "🚑" },
+            { hebrew: "טרקטור",   emoji: "🚜" },
+            // Sports / ספורט
+            { hebrew: "כדורעף",   emoji: "🏐" },
+            { hebrew: "טניס",     emoji: "🎾" },
+            { hebrew: "בולינג",   emoji: "🎳" },
+            { hebrew: "גולף",     emoji: "⛳" },
+            { hebrew: "סקייטבורד",emoji: "🛹" },
+            { hebrew: "כפפת אגרוף",emoji: "🥊" },
+            { hebrew: "מדליון",   emoji: "🏅" },
+            { hebrew: "גלישה",    emoji: "🏄" },
+            { hebrew: "שחייה",    emoji: "🏊" },
+            { hebrew: "קשת",      emoji: "🏹" },
+            // School / בית ספר
+            { hebrew: "מחשב",     emoji: "💻" },
+            { hebrew: "לוח",      emoji: "🪣" },
+            { hebrew: "מחק",      emoji: "🧹" },
+            { hebrew: "סרגל",     emoji: "📏" },
+            { hebrew: "מחשבון",   emoji: "🧮" },
+            { hebrew: "תיק גב",   emoji: "🎒" },
+            { hebrew: "עט",       emoji: "🖊️" },
+            { hebrew: "מחברת",    emoji: "📓" },
+            { hebrew: "דף",       emoji: "📄" },
+            { hebrew: "גיר",      emoji: "🖍️" },
+            // Body / גוף
+            { hebrew: "עיניים",   emoji: "👀" },
+            { hebrew: "אף",       emoji: "👃" },
+            { hebrew: "אוזן",     emoji: "👂" },
+            { hebrew: "יד",       emoji: "✋" },
+            { hebrew: "רגל",      emoji: "🦵" },
+            { hebrew: "לשון",     emoji: "👅" },
+            { hebrew: "שיניים",   emoji: "🦷" },
+            { hebrew: "מוח",      emoji: "🧠" },
+            // Weather / מזג אוויר
+            { hebrew: "שלג",      emoji: "❄️" },
+            { hebrew: "ברק",      emoji: "⚡" },
+            { hebrew: "סופה",     emoji: "🌪️" },
+            { hebrew: "גשם",      emoji: "🌧️" },
+            { hebrew: "ערפל",     emoji: "🌫️" },
+            { hebrew: "שמש וענן", emoji: "⛅" },
+            { hebrew: "ברד",      emoji: "🌨️" },
+            // Kitchen / מטבח
+            { hebrew: "סכין",     emoji: "🔪" },
+            { hebrew: "מחבת",     emoji: "🍳" },
+            { hebrew: "מזלג",     emoji: "🍴" },
+            { hebrew: "כף",       emoji: "🥄" },
+            { hebrew: "קומקום",   emoji: "☕" },
+            { hebrew: "קערה",     emoji: "🫙" },
+            { hebrew: "בקבוק מים",emoji: "🧴" },
+            { hebrew: "פח אשפה",  emoji: "🗑️" },
+            { hebrew: "מקרר",     emoji: "🧊" },
+            { hebrew: "תנור",     emoji: "♨️" },
+            // Space / חלל
+            { hebrew: "פלנטה",    emoji: "🪐" },
+            { hebrew: "מטאור",    emoji: "☄️" },
+            { hebrew: "חליפת חלל",emoji: "🧑‍🚀" },
+            { hebrew: "לוויין",   emoji: "🛸" },
+            { hebrew: "שביט",     emoji: "💫" },
+            { hebrew: "גלקסיה",   emoji: "🌌" },
+            { hebrew: "פנס חלל",  emoji: "🔭" },
+            { hebrew: "אסטרואיד", emoji: "🌑" },
+            // More Animals / עוד חיות
+            { hebrew: "פיל",      emoji: "🐘" },
+            { hebrew: "גורילה",   emoji: "🦍" },
+            { hebrew: "זברה",     emoji: "🦓" },
+            { hebrew: "ג'ירפה",   emoji: "🦒" },
+            { hebrew: "קנגורו",   emoji: "🦘" },
+            { hebrew: "עטלף",     emoji: "🦇" },
+            { hebrew: "טווס",     emoji: "🦚" },
+            { hebrew: "תוכי",     emoji: "🦜" },
+            { hebrew: "עכבר",     emoji: "🐭" },
+            { hebrew: "פרה",      emoji: "🐮" },
+            { hebrew: "כבשה",     emoji: "🐑" },
+            { hebrew: "עז",       emoji: "🐐" },
+            // More Food / עוד אוכל
+            { hebrew: "המבורגר",  emoji: "🍔" },
+            { hebrew: "ביצה",     emoji: "🥚" },
+            { hebrew: "לחם",      emoji: "🍞" },
+            { hebrew: "גבינה",    emoji: "🧀" },
+            { hebrew: "סלט",      emoji: "🥗" },
+            { hebrew: "מרק",      emoji: "🍲" },
+            { hebrew: "צ'יפס",    emoji: "🍟" },
+            { hebrew: "פלאפל",    emoji: "🧆" },
+            { hebrew: "שוורמה",   emoji: "🌯" },
+            { hebrew: "אורז",     emoji: "🍚" },
+            { hebrew: "פסטה",     emoji: "🍝" },
+            { hebrew: "סושי",     emoji: "🍣" },
         ];
 
         // ===== CONFIG =====
@@ -362,9 +483,16 @@
         controls.dampingFactor = 0.08;
         controls.enableDamping = true;
 
-        // Track dragging to distinguish from clicks
-        renderer.domElement.addEventListener('pointerdown', () => { state.isDragging = false; });
-        renderer.domElement.addEventListener('pointermove', () => { state.isDragging = true; });
+        // Track dragging to distinguish from clicks (threshold-based for mobile)
+        let _ptrDownX = 0, _ptrDownY = 0;
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            state.isDragging = false;
+            _ptrDownX = e.clientX; _ptrDownY = e.clientY;
+        });
+        renderer.domElement.addEventListener('pointermove', (e) => {
+            const dx = e.clientX - _ptrDownX, dy = e.clientY - _ptrDownY;
+            if (Math.sqrt(dx*dx + dy*dy) > 10) state.isDragging = true;
+        });
 
         // ===== LIGHTING =====
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -687,6 +815,15 @@
         }
 
         renderer.domElement.addEventListener('click', onGameClick);
+
+        // Explicit touch support for mobile (touchend fires before click delay)
+        renderer.domElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!state.isDragging && e.changedTouches.length > 0) {
+                const t = e.changedTouches[0];
+                onGameClick({ clientX: t.clientX, clientY: t.clientY });
+            }
+        }, { passive: false });
 
         // ===== TONGUE ANIMATION =====
         function getMouthScreenPos() {
