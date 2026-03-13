@@ -105,17 +105,17 @@
         }
 
         #timer-display {
-            position: absolute; top: 55px; left: 50%; transform: translateX(-50%);
-            color: #fff; font-size: 32px; font-weight: bold;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+            position: absolute; top: 58px; right: 20px;
+            color: #fff; font-size: 18px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
             z-index: 20; user-select: none; direction: ltr;
-            background: rgba(0,0,0,0.55); padding: 4px 18px; border-radius: 14px;
+            background: rgba(0,0,0,0.45); padding: 3px 12px; border-radius: 10px;
             transition: color 0.3s;
         }
         #timer-display.urgent { color: #FF4444; animation: timerPulse 0.6s ease-in-out infinite; }
         @keyframes timerPulse {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.08); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
         }
 
         #progress-display {
@@ -181,7 +181,7 @@
             #target-word { font-size: 28px; padding: 8px 20px; margin-top: 8px; }
             #score-display { font-size: 20px; top: 10px; left: 10px; }
             #level-display { font-size: 18px; top: 10px; right: 10px; }
-            #timer-display { font-size: 22px; top: 44px; }
+            #timer-display { font-size: 15px; top: 48px; right: 10px; }
             #progress-display { font-size: 14px; top: 40px; left: 10px; }
             #lizard-container { width: 90px; height: 60px; margin-top: 6px; }
             #lizard-body { width: 75px; height: 42px; }
