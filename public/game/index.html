@@ -955,6 +955,16 @@
                 score: state.score,
                 max_level: state.level,
             }, '*');
+
+            // Save personal best to localStorage
+            const prevBest = parseInt(localStorage.getItem('tongue_best_score') || '0', 10);
+            if (state.score > prevBest) {
+                localStorage.setItem('tongue_best_score', state.score.toString());
+                localStorage.setItem('tongue_best_level', state.level.toString());
+                gameOverText.textContent += ' 🏆 שיא אישי!';
+            } else if (prevBest > 0) {
+                gameOverText.textContent += ` | שיא: ${prevBest} ⭐`;
+            }
         }
 
         // ===== RAYCASTER =====
@@ -1178,6 +1188,12 @@
         // Show room preview behind start screen
         renderer.render(scene, camera);
 
+        // Load saved name from localStorage
+        const savedName = localStorage.getItem('tongue_player_name');
+        if (savedName && playerNameInput) {
+            playerNameInput.value = savedName;
+        }
+
         // Start screen - use button to avoid triggering on input click
         startBtn.addEventListener('click', () => {
             if (playerNameInput && !playerNameInput.value.trim()) {
@@ -1189,6 +1205,8 @@
                 }, 1500);
                 return;
             }
+            // Save name for next time
+            localStorage.setItem('tongue_player_name', playerNameInput.value.trim());
             startScreen.style.display = 'none';
             startLevel(1);
             instructionsEl.classList.add('visible');
