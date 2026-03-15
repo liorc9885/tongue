@@ -15,12 +15,17 @@ export default function GameWrapper() {
     const handleMessage = async (e: MessageEvent<GameOverMessage>) => {
       if (e.data?.type === 'GAME_OVER') {
         const { player_name, score, max_level } = e.data
+        console.log('[GameWrapper] GAME_OVER received:', { player_name, score, max_level })
         if (player_name && score >= 0 && max_level >= 1) {
+          console.log('[GameWrapper] Submitting score...')
           try {
             await submitScore({ player_name, score, max_level })
+            console.log('[GameWrapper] Score submitted successfully')
           } catch (err) {
-            console.error('Failed to submit score:', err)
+            console.error('[GameWrapper] Failed to submit score:', err)
           }
+        } else {
+          console.warn('[GameWrapper] Score not submitted - invalid data:', { player_name, score, max_level })
         }
       }
     }

@@ -8,12 +8,17 @@ export type ScoreEntry = {
 }
 
 export async function submitScore(data: Omit<ScoreEntry, 'created_at'>): Promise<void> {
+  console.log('[submitScore] called with:', JSON.stringify(data))
+
   const supabaseUrl = process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
+    console.error('[submitScore] Missing Supabase environment variables. SUPABASE_URL set:', !!supabaseUrl, 'SUPABASE_KEY set:', !!supabaseKey)
     throw new Error('Missing Supabase environment variables')
   }
+
+  console.log('[submitScore] POSTing to Supabase:', `${supabaseUrl}/rest/v1/scores`)
 
   const res = await fetch(`${supabaseUrl}/rest/v1/scores`, {
     method: 'POST',
@@ -28,8 +33,11 @@ export async function submitScore(data: Omit<ScoreEntry, 'created_at'>): Promise
 
   if (!res.ok) {
     const text = await res.text()
+    console.error('[submitScore] Failed. Status:', res.status, 'Body:', text)
     throw new Error(`Failed to submit score: ${text}`)
   }
+
+  console.log('[submitScore] Success. Status:', res.status)
 }
 
 export async function getLeaderboard(): Promise<ScoreEntry[]> {
