@@ -44,7 +44,7 @@ export default function GameWrapper() {
         title="משחק הלשון"
       />
 
-      {/* כפתור נעילה - תמיד נראה */}
+      {/* כפתור עצירה - תמיד נראה */}
       <button
         onClick={() => setLocked(true)}
         style={{
@@ -63,10 +63,10 @@ export default function GameWrapper() {
           fontFamily: 'Arial, sans-serif',
         }}
       >
-        🔒 נעל מסך
+        ⏹ עצור
       </button>
 
-      {/* שכבת נעילה שחורה */}
+      {/* שכבת עצירה שחורה */}
       {locked && (
         <div
           style={{
@@ -93,7 +93,7 @@ export default function GameWrapper() {
               fontFamily: 'Arial, sans-serif',
             }}
           >
-            🔓 שחרר מסך
+            ▶ חזרה למשחק
           </button>
         </div>
       )}
