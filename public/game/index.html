@@ -221,6 +221,85 @@
             .overlay-screen .start-btn { font-size: 22px; padding: 12px 35px; }
             #instructions { font-size: 11px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
         }
+
+        /* ===== פאנל אדמין ===== */
+        #admin-panel {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 9999;
+            background: rgba(20, 15, 5, 0.95);
+            border: 2px solid rgba(255, 200, 0, 0.7);
+            border-radius: 14px;
+            padding: 16px 18px;
+            width: 270px;
+            direction: rtl;
+            font-family: inherit;
+            color: #ffe066;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+            flex-direction: column;
+            gap: 12px;
+        }
+        #admin-panel h2 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #ffd700;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,200,0,0.3);
+            padding-bottom: 8px;
+        }
+        #admin-panel section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #admin-panel label {
+            font-size: 13px;
+            color: #ffcc44;
+            font-weight: bold;
+        }
+        #admin-panel .admin-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        #admin-panel button {
+            background: rgba(255, 200, 0, 0.18);
+            border: 1px solid rgba(255,200,0,0.5);
+            color: #ffe066;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        #admin-panel button:hover {
+            background: rgba(255, 200, 0, 0.35);
+        }
+        #admin-panel input[type="number"] {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,200,0,0.4);
+            color: #fff;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 13px;
+            width: 80px;
+            text-align: center;
+            font-family: inherit;
+            outline: none;
+        }
+        #admin-close-btn {
+            margin-top: 4px;
+            background: rgba(200,50,50,0.25) !important;
+            border-color: rgba(255,80,80,0.5) !important;
+            color: #ffaaaa !important;
+            width: 100%;
+            font-size: 14px !important;
+        }
+        #admin-close-btn:hover {
+            background: rgba(200,50,50,0.45) !important;
+        }
     </style>
 </head>
 <body>
@@ -279,6 +358,31 @@
             <div class="subtitle" id="game-over-text">הגעת לשלב 1</div>
             <div class="start-btn" id="restart-btn">התחל מחדש</div>
         </div>
+    </div>
+
+    <!-- פאנל אדמין סודי -->
+    <div id="admin-panel" style="display:none">
+        <h2>🔧 פאנל אדמין</h2>
+        <section>
+            <label>הוסף זמן לשלב הנוכחי</label>
+            <div class="admin-row">
+                <button onclick="adminAddTime(30)">+30 שנ'</button>
+                <button onclick="adminAddTime(60)">+60 שנ'</button>
+                <button onclick="adminAddTime(120)">+2 דק'</button>
+            </div>
+            <div class="admin-row">
+                <input id="admin-time-input" type="number" placeholder="שניות" min="1">
+                <button onclick="adminAddCustomTime()">הוסף</button>
+            </div>
+        </section>
+        <section>
+            <label>קפוץ לשלב</label>
+            <div class="admin-row">
+                <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב">
+                <button onclick="adminJumpToLevel()">קפוץ</button>
+            </div>
+        </section>
+        <button id="admin-close-btn" onclick="closeAdminPanel()">סגור ✕</button>
     </div>
 
     <script type="importmap">
@@ -1357,6 +1461,66 @@
             scoreEl.textContent = '0 ⭐';
             startLevel(1);
         });
+
+        // ===== פאנל אדמין סודי =====
+        const ADMIN_CODE = 'Liorc9885';
+        let adminCodeBuffer = '';
+        const adminPanel = document.getElementById('admin-panel');
+
+        document.addEventListener('keydown', (e) => {
+            // לא מגיב לשדות קלט רגילים
+            if (e.target.tagName === 'INPUT') return;
+            adminCodeBuffer += e.key;
+            if (adminCodeBuffer.length > ADMIN_CODE.length) {
+                adminCodeBuffer = adminCodeBuffer.slice(-ADMIN_CODE.length);
+            }
+            if (adminCodeBuffer === ADMIN_CODE) {
+                adminCodeBuffer = '';
+                openAdminPanel();
+            }
+        });
+
+        function openAdminPanel() {
+            if (state.timerActive) state.timerActive = false;
+            adminPanel.style.display = 'flex';
+        }
+
+        function closeAdminPanel() {
+            adminPanel.style.display = 'none';
+            if (state.started && !state.paused && state.timeRemaining > 0) {
+                state.timerActive = true;
+            }
+        }
+
+        function adminAddTime(seconds) {
+            if (!state.started) return;
+            state.timeRemaining += seconds;
+            updateTimerDisplay();
+        }
+
+        function adminAddCustomTime() {
+            const val = parseInt(document.getElementById('admin-time-input').value);
+            if (val > 0) {
+                adminAddTime(val);
+                document.getElementById('admin-time-input').value = '';
+            }
+        }
+
+        function adminJumpToLevel() {
+            const level = parseInt(document.getElementById('admin-level-input').value);
+            if (level >= 1) {
+                document.getElementById('admin-level-input').value = '';
+                closeAdminPanel();
+                if (!state.started) {
+                    // אם המשחק לא התחיל — מתחיל עם השם הנוכחי
+                    const pName = (playerNameInput && playerNameInput.value.trim()) || 'אדמין';
+                    state.score = 0;
+                    scoreEl.textContent = '0 ⭐';
+                    startScreen.style.display = 'none';
+                }
+                startLevel(level);
+            }
+        }
 
         requestAnimationFrame(gameLoop);
     </script>
