@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { submitScore } from './actions'
 
 interface GameOverMessage {
@@ -11,6 +11,8 @@ interface GameOverMessage {
 }
 
 export default function GameWrapper() {
+  const [locked, setLocked] = useState(false)
+
   useEffect(() => {
     const handleMessage = async (e: MessageEvent<GameOverMessage>) => {
       if (e.data?.type === 'GAME_OVER') {
@@ -30,15 +32,71 @@ export default function GameWrapper() {
   }, [])
 
   return (
-    <iframe
-      src="/game/index.html"
-      style={{
-        width: '100vw',
-        height: '100vh',
-        border: 'none',
-        display: 'block',
-      }}
-      title="משחק הלשון"
-    />
+    <>
+      <iframe
+        src="/game/index.html"
+        style={{
+          width: '100vw',
+          height: '100vh',
+          border: 'none',
+          display: 'block',
+        }}
+        title="משחק הלשון"
+      />
+
+      {/* כפתור נעילה - תמיד נראה */}
+      <button
+        onClick={() => setLocked(true)}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '20px',
+          zIndex: 3000,
+          padding: '12px 20px',
+          background: '#c0392b',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          fontFamily: 'Arial, sans-serif',
+        }}
+      >
+        🔒 נעל מסך
+      </button>
+
+      {/* שכבת נעילה שחורה */}
+      {locked && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'black',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <button
+            onClick={() => setLocked(false)}
+            style={{
+              padding: '16px 32px',
+              background: '#2c3e50',
+              color: 'white',
+              border: '2px solid #7f8c8d',
+              borderRadius: '10px',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontFamily: 'Arial, sans-serif',
+            }}
+          >
+            🔓 שחרר מסך
+          </button>
+        </div>
+      )}
+    </>
   )
 }
