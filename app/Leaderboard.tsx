@@ -18,6 +18,23 @@ export default function Leaderboard() {
 
   return (
     <>
+      <style>{`
+        @media (max-width: 480px) {
+          .leaderboard-modal {
+            min-width: unset !important;
+            width: 95vw !important;
+            padding: 14px !important;
+            font-size: 13px;
+          }
+          .leaderboard-modal h2 {
+            font-size: 18px !important;
+          }
+          .leaderboard-th, .leaderboard-td {
+            padding: 5px 4px !important;
+            font-size: 12px !important;
+          }
+        }
+      `}</style>
       {/* Leaderboard trigger button */}
       <button
         onClick={openLeaderboard}
@@ -58,6 +75,7 @@ export default function Leaderboard() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="leaderboard-modal"
             style={{
               background: '#1a1a2e',
               border: '2px solid #FFD700',
@@ -97,10 +115,10 @@ export default function Leaderboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #444' }}>
-                    <th style={{ padding: '8px', textAlign: 'right', color: '#FFD700' }}>#</th>
-                    <th style={{ padding: '8px', textAlign: 'right', color: '#FFD700' }}>שם</th>
-                    <th style={{ padding: '8px', textAlign: 'center', color: '#FFD700' }}>ניקוד ⭐</th>
-                    <th style={{ padding: '8px', textAlign: 'center', color: '#FFD700' }}>שלב</th>
+                    <th className="leaderboard-th" style={{ padding: '8px', textAlign: 'right', color: '#FFD700' }}>#</th>
+                    <th className="leaderboard-th" style={{ padding: '8px', textAlign: 'right', color: '#FFD700' }}>שם</th>
+                    <th className="leaderboard-th" style={{ padding: '8px', textAlign: 'center', color: '#FFD700' }}>ניקוד ⭐</th>
+                    <th className="leaderboard-th" style={{ padding: '8px', textAlign: 'center', color: '#FFD700' }}>שלב</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,12 +130,12 @@ export default function Leaderboard() {
                         background: i === 0 ? 'rgba(255,215,0,0.1)' : 'transparent',
                       }}
                     >
-                      <td style={{ padding: '8px', color: i === 0 ? '#FFD700' : '#aaa' }}>
+                      <td className="leaderboard-td" style={{ padding: '8px', color: i === 0 ? '#FFD700' : '#aaa' }}>
                         {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                       </td>
-                      <td style={{ padding: '8px' }}>{s.player_name}</td>
-                      <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>{s.score}</td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>{s.max_level}</td>
+                      <td className="leaderboard-td" style={{ padding: '8px' }}>{s.player_name}</td>
+                      <td className="leaderboard-td" style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>{s.score}</td>
+                      <td className="leaderboard-td" style={{ padding: '8px', textAlign: 'center' }}>{s.max_level}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -357,6 +357,19 @@
         #admin-confirm-btn:not(:disabled):hover {
             background: rgba(100,255,100,0.38);
         }
+
+        @media (max-width: 480px) {
+            #admin-panel {
+                width: 200px;
+                padding: 10px 12px;
+                bottom: 8px;
+                left: 8px;
+            }
+            #admin-panel h2 { font-size: 14px; }
+            #admin-panel button { font-size: 11px; padding: 4px 7px; }
+            #admin-panel label { font-size: 11px; }
+            #admin-panel input[type="number"] { font-size: 11px; width: 60px; }
+        }
     </style>
 </head>
 <body>
