@@ -300,6 +300,53 @@
         #admin-close-btn:hover {
             background: rgba(200,50,50,0.45) !important;
         }
+
+        /* ===== ווידג'ט קוד אדמין ===== */
+        #admin-code-widget {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 8000;
+            direction: rtl;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #admin-code-label {
+            font-size: 11px;
+            color: rgba(255, 200, 0, 0.6);
+            font-family: monospace;
+            user-select: none;
+        }
+        #admin-code-entry {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        #admin-code-entry input {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,200,0,0.3);
+            color: #ffe066;
+            border-radius: 7px;
+            padding: 4px 8px;
+            font-size: 13px;
+            width: 110px;
+            font-family: monospace;
+            outline: none;
+        }
+        #admin-code-entry button {
+            background: rgba(255,200,0,0.15);
+            border: 1px solid rgba(255,200,0,0.35);
+            color: #ffe066;
+            border-radius: 7px;
+            padding: 4px 9px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #admin-code-entry button:hover {
+            background: rgba(255,200,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -357,6 +404,15 @@
             <h1>⏰ הזמן נגמר!</h1>
             <div class="subtitle" id="game-over-text">הגעת לשלב 1</div>
             <div class="start-btn" id="restart-btn">התחל מחדש</div>
+        </div>
+    </div>
+
+    <!-- ווידג'ט קוד אדמין -->
+    <div id="admin-code-widget">
+        <div id="admin-code-label">קוד אדמין: Liorc9885</div>
+        <div id="admin-code-entry">
+            <input id="admin-code-input" type="text" placeholder="הקלד קוד..." autocomplete="off">
+            <button onclick="checkAdminCode()">אישור</button>
         </div>
     </div>
 
@@ -1415,6 +1471,7 @@
                 localStorage.setItem('tongue_player_name', name);
                 state.score = saved.score || 0;
                 startScreen.style.display = 'none';
+                showAdminWidget();
                 startLevel(saved.level);
                 instructionsEl.classList.add('visible');
                 setTimeout(() => instructionsEl.classList.remove('visible'), 4000);
@@ -1435,6 +1492,7 @@
             // Save name for next time
             localStorage.setItem('tongue_player_name', playerNameInput.value.trim());
             startScreen.style.display = 'none';
+            showAdminWidget();
             startLevel(1);
             instructionsEl.classList.add('visible');
             setTimeout(() => instructionsEl.classList.remove('visible'), 4000);
@@ -1464,20 +1522,29 @@
 
         // ===== פאנל אדמין סודי =====
         const ADMIN_CODE = 'Liorc9885';
-        let adminCodeBuffer = '';
         const adminPanel = document.getElementById('admin-panel');
+        const adminCodeWidget = document.getElementById('admin-code-widget');
+        const adminCodeInput = document.getElementById('admin-code-input');
 
-        document.addEventListener('keydown', (e) => {
-            // לא מגיב לשדות קלט רגילים
-            if (e.target.tagName === 'INPUT') return;
-            adminCodeBuffer += e.key;
-            if (adminCodeBuffer.length > ADMIN_CODE.length) {
-                adminCodeBuffer = adminCodeBuffer.slice(-ADMIN_CODE.length);
-            }
-            if (adminCodeBuffer === ADMIN_CODE) {
-                adminCodeBuffer = '';
+        // הצג את ווידג'ט הקוד כשהמשחק מתחיל
+        function showAdminWidget() {
+            adminCodeWidget.style.display = 'flex';
+        }
+
+        // בדיקת קוד מהשדה
+        function checkAdminCode() {
+            if (adminCodeInput.value === ADMIN_CODE) {
+                adminCodeInput.value = '';
                 openAdminPanel();
+            } else {
+                adminCodeInput.style.borderColor = 'rgba(255,80,80,0.7)';
+                setTimeout(() => { adminCodeInput.style.borderColor = 'rgba(255,200,0,0.3)'; }, 800);
+                adminCodeInput.value = '';
             }
+        }
+
+        adminCodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); checkAdminCode(); }
         });
 
         function openAdminPanel() {
