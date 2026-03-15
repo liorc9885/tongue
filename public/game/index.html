@@ -158,6 +158,13 @@
             animation: pulse 1.5s ease-in-out infinite;
             cursor: pointer;
         }
+        .overlay-screen .leaderboard-btn {
+            font-size: 20px; color: #FFD700;
+            padding: 10px 30px;
+            border: 2px solid rgba(255,215,0,0.5); border-radius: 15px;
+            margin-top: 16px; cursor: pointer;
+            background: rgba(0,0,0,0.4);
+        }
         @keyframes pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.05); opacity: 0.8; }
@@ -189,6 +196,7 @@
             .overlay-screen .subtitle { font-size: 18px; margin-bottom: 25px; }
             .overlay-screen .start-btn { font-size: 22px; padding: 12px 35px; }
             #instructions { font-size: 11px; bottom: 10px; }
+            .overlay-screen .leaderboard-btn { font-size: 16px; padding: 8px 20px; }
         }
     </style>
 </head>
@@ -232,6 +240,7 @@
                 style="margin-bottom:16px;padding:10px 18px;font-size:20px;border-radius:12px;border:2px solid rgba(255,200,0,0.6);background:rgba(0,0,0,0.5);color:#fff;text-align:center;direction:rtl;outline:none;width:220px;"
             />
             <div class="start-btn" id="start-btn">לחץ להתחיל</div>
+            <div class="leaderboard-btn" id="start-leaderboard-btn">🏆 טופ</div>
         </div>
 
         <div id="level-complete-screen" class="overlay-screen" style="display:none">
@@ -244,6 +253,7 @@
             <h1>⏰ הזמן נגמר!</h1>
             <div class="subtitle" id="game-over-text">הגעת לשלב 1</div>
             <div class="start-btn" id="restart-btn">התחל מחדש</div>
+            <div class="leaderboard-btn" id="gameover-leaderboard-btn">🏆 טופ</div>
         </div>
     </div>
 
@@ -1234,6 +1244,14 @@
             scoreEl.textContent = '0 ⭐';
             startLevel(1);
         });
+
+        // Leaderboard buttons → ask parent to show leaderboard
+        function sendShowLeaderboard(e) {
+            e.stopPropagation();
+            window.parent.postMessage({ type: 'SHOW_LEADERBOARD' }, '*');
+        }
+        document.getElementById('start-leaderboard-btn').addEventListener('click', sendShowLeaderboard);
+        document.getElementById('gameover-leaderboard-btn').addEventListener('click', sendShowLeaderboard);
 
         requestAnimationFrame(gameLoop);
     </script>

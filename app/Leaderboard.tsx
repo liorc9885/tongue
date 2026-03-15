@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { getLeaderboard, ScoreEntry } from './actions'
 
 export default function Leaderboard() {
@@ -16,6 +16,16 @@ export default function Leaderboard() {
     })
   }
 
+  useEffect(() => {
+    function handleMessage(e: MessageEvent) {
+      if (e.data?.type === 'SHOW_LEADERBOARD') {
+        openLeaderboard()
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
   return (
     <>
       {/* Leaderboard trigger button */}
@@ -25,8 +35,7 @@ export default function Leaderboard() {
         style={{
           position: 'fixed',
           top: '12px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          right: '12px',
           zIndex: 1000,
           background: 'rgba(0,0,0,0.75)',
           color: '#FFD700',
