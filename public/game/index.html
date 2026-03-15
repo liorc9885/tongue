@@ -119,11 +119,37 @@
         }
 
         #progress-display {
-            position: absolute; top: 50px; left: 20px;
-            color: #aaffaa; font-size: 18px; font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            position: absolute; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            color: #FFD700; font-size: 22px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
             z-index: 20; user-select: none; direction: ltr;
+            background: rgba(0,0,0,0.5); padding: 6px 20px; border-radius: 14px;
+            border: 1px solid rgba(255,215,0,0.3);
         }
+
+        #pause-btn {
+            position: absolute; bottom: 20px; right: 20px;
+            z-index: 25; pointer-events: auto;
+            background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.4);
+            color: #fff; font-size: 22px;
+            width: 50px; height: 50px; border-radius: 50%;
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        #pause-btn:hover { background: rgba(0,0,0,0.85); }
+
+        #pause-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10,10,30,0.75); z-index: 90;
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column;
+            color: #fff; font-size: 52px; font-weight: bold;
+            text-shadow: 0 0 20px rgba(255,255,255,0.4);
+            pointer-events: none;
+        }
+        #pause-overlay.visible { display: flex; }
 
         #feedback-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -182,7 +208,8 @@
             #score-display { font-size: 20px; top: 10px; left: 10px; }
             #level-display { font-size: 18px; top: 10px; right: 10px; }
             #timer-display { font-size: 15px; top: 48px; right: 10px; }
-            #progress-display { font-size: 14px; top: 40px; left: 10px; }
+            #progress-display { font-size: 15px; bottom: 15px; }
+            #pause-btn { width: 42px; height: 42px; font-size: 18px; bottom: 15px; right: 15px; }
             #lizard-container { width: 90px; height: 60px; margin-top: 6px; }
             #lizard-body { width: 75px; height: 42px; }
             .overlay-screen h1 { font-size: 40px; }
@@ -216,8 +243,10 @@
         <div id="score-display">0 ⭐</div>
         <div id="level-display">שלב 1</div>
         <div id="timer-display">4:00</div>
-        <div id="progress-display">0 / 20</div>
+        <div id="progress-display">⭐ 0 / 0</div>
         <div id="feedback-overlay"></div>
+        <div id="pause-overlay">⏸ מושהה</div>
+        <button id="pause-btn" style="display:none;">⏸</button>
 
         <div id="instructions">גרור כדי לסובב את החדר | לחץ על החפץ הנכון</div>
 
@@ -497,6 +526,8 @@
         const timerEl = document.getElementById('timer-display');
         const progressEl = document.getElementById('progress-display');
         const feedbackEl = document.getElementById('feedback-overlay');
+        const pauseBtn = document.getElementById('pause-btn');
+        const pauseOverlay = document.getElementById('pause-overlay');
         const startScreen = document.getElementById('start-screen');
         const levelCompleteScreen = document.getElementById('level-complete-screen');
         const levelCompleteText = document.getElementById('level-complete-text');
@@ -531,6 +562,7 @@
             levelCaughtObjects: 0,
             timeRemaining: 0,
             timerActive: false,
+            paused: false,
         };
 
         // ===== THREE.JS SETUP =====
@@ -866,8 +898,24 @@
         }
 
         function updateProgressDisplay() {
-            progressEl.textContent = `${state.levelCaughtObjects} / ${state.levelTotalObjects}`;
+            progressEl.textContent = `⭐ ${state.levelCaughtObjects} / ${state.levelTotalObjects}`;
         }
+
+        // ===== PAUSE =====
+        function togglePause() {
+            if (!state.started || (!state.timerActive && !state.paused)) return;
+            state.paused = !state.paused;
+            if (state.paused) {
+                state.timerActive = false;
+                pauseOverlay.classList.add('visible');
+                pauseBtn.textContent = '▶';
+            } else {
+                state.timerActive = true;
+                pauseOverlay.classList.remove('visible');
+                pauseBtn.textContent = '⏸';
+            }
+        }
+        pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePause(); });
 
         // ===== PICK NEXT TARGET FROM REMAINING OBJECTS =====
         function pickNewTarget() {
@@ -939,24 +987,35 @@
             levelEl.textContent = `שלב ${level}`;
             updateTimerDisplay();
             pickNewTarget();
+            // Show pause button
+            state.paused = false;
+            pauseBtn.style.display = 'flex';
+            pauseBtn.textContent = '⏸';
+            pauseOverlay.classList.remove('visible');
         }
 
         // ===== LEVEL COMPLETE =====
         function showLevelComplete() {
             state.timerActive = false;
+            state.paused = false;
             targetWordEl.classList.remove('visible');
             levelCompleteText.textContent = `סיימת את שלב ${state.level}! 🎉`;
             levelCompleteScreen.style.display = 'flex';
+            pauseBtn.style.display = 'none';
+            pauseOverlay.classList.remove('visible');
         }
 
         // ===== GAME OVER =====
         function showGameOver() {
             state.timerActive = false;
+            state.paused = false;
             state.tongueState = 'idle';
             localStorage.removeItem('tongue_saved_game');
             targetWordEl.classList.remove('visible');
             gameOverText.textContent = `הגעת לשלב ${state.level} | ניקוד: ${state.score} ⭐`;
             gameOverScreen.style.display = 'flex';
+            pauseBtn.style.display = 'none';
+            pauseOverlay.classList.remove('visible');
 
             // Submit score to parent Next.js app via postMessage
             const playerName = (playerNameInput && playerNameInput.value.trim()) || 'אנונימי';
@@ -984,7 +1043,7 @@
 
         function onGameClick(event) {
             if (!state.started || state.tongueState !== 'idle' || state.isDragging) return;
-            if (!state.timerActive) return; // Don't allow clicks on overlay screens
+            if (!state.timerActive || state.paused) return; // Don't allow clicks on overlay screens or when paused
 
             const rect = renderer.domElement.getBoundingClientRect();
             pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
