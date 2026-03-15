@@ -309,6 +309,11 @@
             z-index: 8000;
             display: none;
         }
+        #admin-code-entry {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
         #admin-code-entry input {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,200,0,0.2);
@@ -323,6 +328,34 @@
         }
         #admin-code-entry input:focus {
             border-color: rgba(255,200,0,0.45);
+        }
+        #admin-code-submit {
+            background: rgba(255,200,0,0.2);
+            border: 1px solid rgba(255,200,0,0.45);
+            color: #ffe066;
+            border-radius: 7px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #admin-code-submit:hover { background: rgba(255,200,0,0.38); }
+        .admin-choice.selected {
+            background: rgba(255,200,0,0.45) !important;
+            border-color: #ffe066 !important;
+            box-shadow: 0 0 6px rgba(255,200,0,0.5);
+        }
+        #admin-confirm-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        #admin-confirm-btn:not(:disabled) {
+            background: rgba(100,255,100,0.22);
+            border-color: rgba(100,255,100,0.6);
+            color: #afffaf;
+        }
+        #admin-confirm-btn:not(:disabled):hover {
+            background: rgba(100,255,100,0.38);
         }
     </style>
 </head>
@@ -388,6 +421,7 @@
     <div id="admin-code-widget">
         <div id="admin-code-entry">
             <input id="admin-code-input" type="password" placeholder="••••••••" autocomplete="off">
+            <button id="admin-code-submit" onclick="checkAdminCode()">אישור</button>
         </div>
     </div>
 
@@ -398,38 +432,41 @@
         <section>
             <label>⏱ הארכת זמן</label>
             <div class="admin-row">
-                <button onclick="adminAddTime(30)">+30 שנ'</button>
-                <button onclick="adminAddTime(60)">+1 דק'</button>
-                <button onclick="adminAddTime(120)">+2 דק'</button>
-                <button onclick="adminAddTime(300)">+5 דק'</button>
+                <button class="admin-choice" data-action="time:30">+30 שנ'</button>
+                <button class="admin-choice" data-action="time:60">+1 דק'</button>
+                <button class="admin-choice" data-action="time:120">+2 דק'</button>
+                <button class="admin-choice" data-action="time:300">+5 דק'</button>
             </div>
             <div class="admin-row">
-                <input id="admin-time-input" type="number" placeholder="שניות" min="1">
-                <button onclick="adminAddCustomTime()">הוסף</button>
+                <input id="admin-time-input" type="number" placeholder="שניות" min="1"
+                       oninput="selectAdminActionFromInput('time-custom', this)">
             </div>
         </section>
 
         <section>
             <label>🎯 דילוג לשלב</label>
             <div class="admin-row">
-                <button onclick="adminJumpRelative(-1)">שלב קודם</button>
-                <button onclick="adminJumpRelative(1)">שלב הבא</button>
+                <button class="admin-choice" data-action="level:-1">שלב קודם</button>
+                <button class="admin-choice" data-action="level:+1">שלב הבא</button>
             </div>
             <div class="admin-row">
-                <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב">
-                <button onclick="adminJumpToLevel()">קפוץ</button>
+                <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב"
+                       oninput="selectAdminActionFromInput('level-custom', this)">
             </div>
         </section>
 
         <section>
             <label>⚙️ שונות</label>
             <div class="admin-row">
-                <button onclick="adminFreezeTime()">⏸ הקפא זמן</button>
-                <button onclick="adminUnfreezeTime()">▶ שחרר זמן</button>
+                <button class="admin-choice" data-action="freeze">⏸ הקפא זמן</button>
+                <button class="admin-choice" data-action="unfreeze">▶ שחרר זמן</button>
             </div>
         </section>
 
-        <button id="admin-close-btn" onclick="closeAdminPanel()">סגור ✕</button>
+        <div class="admin-row" style="margin-top:6px; gap:8px;">
+            <button id="admin-confirm-btn" onclick="executeAdminAction()" disabled>✅ בצע</button>
+            <button id="admin-close-btn" onclick="closeAdminPanel()">סגור ✕</button>
+        </div>
     </div>
 
     <script type="importmap">
@@ -1538,60 +1575,88 @@
             if (e.key === 'Enter') { e.preventDefault(); checkAdminCode(); }
         });
 
+        let timeFrozen = false;
+        let selectedAction = null; // { type, value }
+
         function openAdminPanel() {
             if (state.timerActive) state.timerActive = false;
+            // reset selection
+            selectedAction = null;
+            document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
+            document.getElementById('admin-confirm-btn').disabled = true;
+            document.getElementById('admin-time-input').value = '';
+            document.getElementById('admin-level-input').value = '';
             adminPanel.style.display = 'flex';
         }
 
-        function closeAdminPanel() {
-            adminPanel.style.display = 'none';
-            if (state.started && !state.paused && state.timeRemaining > 0 && !timeFrozen) {
-                state.timerActive = true;
+        // wire choice buttons
+        document.querySelectorAll('.admin-choice').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedAction = { type: 'preset', action: btn.dataset.action };
+                document.getElementById('admin-confirm-btn').disabled = false;
+            });
+        });
+
+        function selectAdminActionFromInput(type, inputEl) {
+            const val = parseInt(inputEl.value);
+            if (!val || val <= 0) {
+                selectedAction = null;
+                document.getElementById('admin-confirm-btn').disabled = true;
+                return;
             }
+            document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
+            selectedAction = { type, value: val };
+            document.getElementById('admin-confirm-btn').disabled = false;
         }
 
-        function adminAddTime(seconds) {
-            if (!state.started) return;
-            state.timeRemaining += seconds;
-            updateTimerDisplay();
-        }
+        function executeAdminAction() {
+            if (!selectedAction) return;
 
-        function adminAddCustomTime() {
-            const val = parseInt(document.getElementById('admin-time-input').value);
-            if (val > 0) {
-                adminAddTime(val);
-                document.getElementById('admin-time-input').value = '';
-            }
-        }
-
-        function adminJumpToLevel() {
-            const level = parseInt(document.getElementById('admin-level-input').value);
-            if (level >= 1) {
-                document.getElementById('admin-level-input').value = '';
+            if (selectedAction.type === 'preset') {
+                const [cat, val] = selectedAction.action.split(':');
+                if (cat === 'time') {
+                    if (state.started) {
+                        state.timeRemaining += parseInt(val);
+                        updateTimerDisplay();
+                    }
+                    closeAdminPanel();
+                } else if (cat === 'level') {
+                    const delta = parseInt(val);
+                    const target = Math.max(1, state.level + delta);
+                    closeAdminPanel();
+                    startLevel(target);
+                } else if (cat === 'freeze') {
+                    timeFrozen = true;
+                    state.timerActive = false;
+                    closeAdminPanel();
+                } else if (cat === 'unfreeze') {
+                    timeFrozen = false;
+                    if (state.started && !state.paused && state.timeRemaining > 0) state.timerActive = true;
+                    closeAdminPanel();
+                }
+            } else if (selectedAction.type === 'time-custom') {
+                if (state.started) {
+                    state.timeRemaining += selectedAction.value;
+                    updateTimerDisplay();
+                }
                 closeAdminPanel();
+            } else if (selectedAction.type === 'level-custom') {
+                const level = selectedAction.value;
                 if (!state.started) {
                     state.score = 0;
                     scoreEl.textContent = '0 ⭐';
                     startScreen.style.display = 'none';
                 }
+                closeAdminPanel();
                 startLevel(level);
             }
         }
 
-        function adminJumpRelative(delta) {
-            const target = Math.max(1, state.level + delta);
-            closeAdminPanel();
-            startLevel(target);
-        }
-
-        let timeFrozen = false;
-        function adminFreezeTime() {
-            timeFrozen = true;
-            state.timerActive = false;
-        }
-        function adminUnfreezeTime() {
-            timeFrozen = false;
-            if (state.started && !state.paused && state.timeRemaining > 0) {
+        function closeAdminPanel() {
+            adminPanel.style.display = 'none';
+            if (state.started && !state.paused && state.timeRemaining > 0 && !timeFrozen) {
                 state.timerActive = true;
             }
         }
