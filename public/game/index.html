@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>משחק הלשון 🦎</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #1a1a2e; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+
+        #three-canvas { display: block; width: 100%; height: 100%; }
+
+        #tongue-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+
+        #ui-overlay {
+            position: absolute; top: 0; left: 0; right: 0;
+            pointer-events: none; z-index: 20;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        #target-word {
+            margin-top: 15px; padding: 12px 40px;
+            background: rgba(0,0,0,0.7); border-radius: 20px;
+            color: #fff; font-size: 44px; font-weight: bold;
+            text-shadow: 0 0 20px rgba(255,200,0,0.5);
+            border: 2px solid rgba(255,200,0,0.4);
+            direction: rtl; user-select: none;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        #target-word.visible { opacity: 1; }
+
+        #lizard-container {
+            margin-top: 10px; position: relative;
+            width: 120px; height: 80px; user-select: none;
+        }
+
+        #lizard-body {
+            width: 100px; height: 55px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border-radius: 50% 50% 45% 45%;
+            position: absolute; bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            animation: lizardBob 2s ease-in-out infinite;
+        }
+
+        @keyframes lizardBob {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(3px); }
+        }
+
+        .lizard-eye {
+            width: 18px; height: 20px;
+            background: white; border-radius: 50%;
+            position: absolute; top: 5px;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+        }
+        .lizard-eye.left { left: 18px; }
+        .lizard-eye.right { right: 18px; }
+
+        .lizard-pupil {
+            width: 9px; height: 11px;
+            background: #1a1a1a; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
+        }
+
+        #lizard-mouth {
+            width: 8px; height: 8px;
+            background: #E84057;
+            border-radius: 50%;
+            position: absolute; bottom: -2px; left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .lizard-foot {
+            width: 14px; height: 8px;
+            background: #388E3C;
+            border-radius: 50%;
+            position: absolute; bottom: -4px;
+        }
+        .lizard-foot.fl { left: 5px; }
+        .lizard-foot.fr { right: 5px; }
+
+        #score-display {
+            position: absolute; top: 15px; left: 20px;
+            color: #FFD700; font-size: 28px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 20; user-select: none; direction: ltr;
+        }
+
+        #level-display {
+            position: absolute; top: 15px; right: 20px;
+            color: #FFD700; font-size: 24px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 20; user-select: none; direction: rtl;
+            background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 12px;
+        }
+
+        #timer-display {
+            position: absolute; top: 58px; right: 20px;
+            color: #fff; font-size: 18px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            z-index: 20; user-select: none; direction: ltr;
+            background: rgba(0,0,0,0.45); padding: 3px 12px; border-radius: 10px;
+            transition: color 0.3s;
+        }
+        #timer-display.urgent { color: #FF4444; animation: timerPulse 0.6s ease-in-out infinite; }
+        @keyframes timerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        #progress-display {
+            position: absolute; top: 50px; left: 20px;
+            color: #aaffaa; font-size: 18px; font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 20; user-select: none; direction: ltr;
+        }
+
+        #feedback-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 15; pointer-events: none;
+            opacity: 0; transition: opacity 0.15s;
+        }
+        #feedback-overlay.wrong { background: rgba(255,0,0,0.2); opacity: 1; }
+        #feedback-overlay.correct { background: rgba(0,255,0,0.15); opacity: 1; }
+
+        /* Shared overlay screen style */
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10,10,30,0.92); z-index: 100;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; user-select: none;
+        }
+        .overlay-screen h1 {
+            font-size: 64px; color: #4CAF50;
+            text-shadow: 0 0 30px rgba(76,175,80,0.5);
+            margin-bottom: 10px;
+        }
+        .overlay-screen .subtitle {
+            font-size: 28px; color: #aaa;
+            margin-bottom: 40px; text-align: center; direction: rtl;
+        }
+        .overlay-screen .start-btn {
+            font-size: 32px; color: #FFD700;
+            padding: 15px 50px;
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            animation: pulse 1.5s ease-in-out infinite;
+            cursor: pointer;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        #start-screen h1 { color: #4CAF50; }
+        #level-complete-screen h1 { color: #FFD700; text-shadow: 0 0 30px rgba(255,215,0,0.5); }
+        #game-over-screen h1 { color: #FF4444; text-shadow: 0 0 30px rgba(255,68,68,0.5); }
+
+        #instructions {
+            position: absolute; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.5); font-size: 14px;
+            z-index: 20; user-select: none; pointer-events: none;
+            text-align: center; direction: rtl;
+            opacity: 0; transition: opacity 0.5s;
+        }
+        #instructions.visible { opacity: 1; }
+
+        @media (max-width: 600px) {
+            #target-word { font-size: 28px; padding: 8px 20px; margin-top: 8px; }
+            #score-display { font-size: 20px; top: 10px; left: 10px; }
+            #level-display { font-size: 18px; top: 10px; right: 10px; }
+            #timer-display { font-size: 15px; top: 48px; right: 10px; }
+            #progress-display { font-size: 14px; top: 40px; left: 10px; }
+            #lizard-container { width: 90px; height: 60px; margin-top: 6px; }
+            #lizard-body { width: 75px; height: 42px; }
+            .overlay-screen h1 { font-size: 40px; }
+            .overlay-screen .subtitle { font-size: 18px; margin-bottom: 25px; }
+            .overlay-screen .start-btn { font-size: 22px; padding: 12px 35px; }
+            #instructions { font-size: 11px; bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="tongue-canvas"></canvas>
+
+        <div id="ui-overlay">
+            <div id="target-word"></div>
+            <div id="lizard-container">
+                <div id="lizard-body">
+                    <div class="lizard-eye left">
+                        <div class="lizard-pupil" id="pupil-left"></div>
+                    </div>
+                    <div class="lizard-eye right">
+                        <div class="lizard-pupil" id="pupil-right"></div>
+                    </div>
+                    <div id="lizard-mouth"></div>
+                    <div class="lizard-foot fl"></div>
+                    <div class="lizard-foot fr"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="score-display">0 ⭐</div>
+        <div id="level-display">שלב 1</div>
+        <div id="timer-display">4:00</div>
+        <div id="progress-display">0 / 20</div>
+        <div id="feedback-overlay"></div>
+
+        <div id="instructions">גרור כדי לסובב את החדר | לחץ על החפץ הנכון</div>
+
+        <div id="start-screen" class="overlay-screen">
+            <h1>🦎 משחק הלשון</h1>
+            <div class="subtitle">מצא את כל החפצים בחדר לפני שהזמן נגמר!</div>
+            <input
+                id="player-name-input"
+                type="text"
+                placeholder="הכנס את שמך"
+                maxlength="20"
+                style="margin-bottom:16px;padding:10px 18px;font-size:20px;border-radius:12px;border:2px solid rgba(255,200,0,0.6);background:rgba(0,0,0,0.5);color:#fff;text-align:center;direction:rtl;outline:none;width:220px;"
+            />
+            <div class="start-btn" id="start-btn">לחץ להתחיל</div>
+        </div>
+
+        <div id="level-complete-screen" class="overlay-screen" style="display:none">
+            <h1>🎉 כל הכבוד!</h1>
+            <div class="subtitle" id="level-complete-text">סיימת את שלב 1!</div>
+            <div class="start-btn" id="next-level-btn">שלב הבא ←</div>
+        </div>
+
+        <div id="game-over-screen" class="overlay-screen" style="display:none">
+            <h1>⏰ הזמן נגמר!</h1>
+            <div class="subtitle" id="game-over-text">הגעת לשלב 1</div>
+            <div class="start-btn" id="restart-btn">התחל מחדש</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ===== ITEMS (100 toys!) =====
+        const ITEMS = [
+            // Original items
+            { hebrew: "כדור",     emoji: "⚽" },
+            { hebrew: "ספר",      emoji: "📖" },
+            { hebrew: "כוס",      emoji: "🥤" },
+            { hebrew: "מפתח",     emoji: "🔑" },
+            { hebrew: "שעון",     emoji: "⏰" },
+            { hebrew: "נר",       emoji: "🕯️" },
+            { hebrew: "תפוח",     emoji: "🍎" },
+            { hebrew: "כובע",     emoji: "🎩" },
+            { hebrew: "נעל",      emoji: "👟" },
+            { hebrew: "עיפרון",   emoji: "✏️" },
+            { hebrew: "מספריים",  emoji: "✂️" },
+            { hebrew: "טלפון",    emoji: "📱" },
+            { hebrew: "מברשת",    emoji: "🪥" },
+            { hebrew: "כרית",     emoji: "🛏️" },
+            { hebrew: "מנורה",    emoji: "💡" },
+            { hebrew: "בקבוק",    emoji: "🍼" },
+            { hebrew: "עוגה",     emoji: "🎂" },
+            { hebrew: "פרח",      emoji: "🌸" },
+            { hebrew: "דג",       emoji: "🐟" },
+            { hebrew: "לב",       emoji: "❤️" },
+            // Toys
+            { hebrew: "רובוט",    emoji: "🤖" },
+            { hebrew: "דובי",     emoji: "🧸" },
+            { hebrew: "רכבת",     emoji: "🚂" },
+            { hebrew: "מכונית",   emoji: "🚗" },
+            { hebrew: "כתר",      emoji: "👑" },
+            { hebrew: "חרב",      emoji: "🗡️" },
+            { hebrew: "מגן",      emoji: "🛡️" },
+            { hebrew: "חללית",    emoji: "🚀" },
+            { hebrew: "תוף",      emoji: "🥁" },
+            { hebrew: "גיטרה",    emoji: "🎸" },
+            { hebrew: "קשת",      emoji: "🏹" },
+            { hebrew: "כדורסל",   emoji: "🏀" },
+            { hebrew: "אופניים",  emoji: "🚲" },
+            { hebrew: "מטוס",     emoji: "✈️" },
+            { hebrew: "ספינה",    emoji: "🚢" },
+            // Animals
+            { hebrew: "ארנב",     emoji: "🐰" },
+            { hebrew: "חתול",     emoji: "🐱" },
+            { hebrew: "כלב",      emoji: "🐶" },
+            { hebrew: "פרפר",     emoji: "🦋" },
+            { hebrew: "ינשוף",    emoji: "🦉" },
+            { hebrew: "דינוזאור", emoji: "🦕" },
+            { hebrew: "נחש",      emoji: "🐍" },
+            { hebrew: "צפרדע",    emoji: "🐸" },
+            { hebrew: "דבורה",    emoji: "🐝" },
+            { hebrew: "פינגווין", emoji: "🐧" },
+            { hebrew: "סוס",      emoji: "🐴" },
+            { hebrew: "עכביש",    emoji: "🕷️" },
+            { hebrew: "תמנון",    emoji: "🐙" },
+            { hebrew: "לוויתן",   emoji: "🐋" },
+            { hebrew: "נמר",      emoji: "🐆" },
+            // Food
+            { hebrew: "בננה",     emoji: "🍌" },
+            { hebrew: "ענבים",    emoji: "🍇" },
+            { hebrew: "אבטיח",    emoji: "🍉" },
+            { hebrew: "פיצה",     emoji: "🍕" },
+            { hebrew: "גלידה",    emoji: "🍦" },
+            { hebrew: "סופגנייה", emoji: "🍩" },
+            { hebrew: "שוקולד",   emoji: "🍫" },
+            { hebrew: "עוגייה",   emoji: "🍪" },
+            { hebrew: "תות",      emoji: "🍓" },
+            { hebrew: "לימון",    emoji: "🍋" },
+            { hebrew: "דובדבן",   emoji: "🍒" },
+            { hebrew: "אגס",      emoji: "🍐" },
+            { hebrew: "תירס",     emoji: "🌽" },
+            { hebrew: "גזר",      emoji: "🥕" },
+            { hebrew: "פטריה",    emoji: "🍄" },
+            // Objects
+            { hebrew: "מצלמה",    emoji: "📷" },
+            { hebrew: "משקפיים",  emoji: "👓" },
+            { hebrew: "מטריה",    emoji: "🌂" },
+            { hebrew: "פנס",      emoji: "🔦" },
+            { hebrew: "מגנט",     emoji: "🧲" },
+            { hebrew: "פטיש",     emoji: "🔨" },
+            { hebrew: "מברג",     emoji: "🪛" },
+            { hebrew: "מנעול",    emoji: "🔒" },
+            { hebrew: "פעמון",    emoji: "🔔" },
+            { hebrew: "כוכב",     emoji: "⭐" },
+            { hebrew: "ירח",      emoji: "🌙" },
+            { hebrew: "שמש",      emoji: "☀️" },
+            { hebrew: "ענן",      emoji: "☁️" },
+            { hebrew: "קשת בענן", emoji: "🌈" },
+            { hebrew: "אש",       emoji: "🔥" },
+            { hebrew: "יהלום",    emoji: "💎" },
+            { hebrew: "בלון",     emoji: "🎈" },
+            { hebrew: "מתנה",     emoji: "🎁" },
+            { hebrew: "קוביה",    emoji: "🎲" },
+            { hebrew: "מפה",      emoji: "🗺️" },
+            { hebrew: "שעון חול", emoji: "⏳" },
+            { hebrew: "טלסקופ",   emoji: "🔭" },
+            { hebrew: "מיקרוסקופ",emoji: "🔬" },
+            { hebrew: "גביע",     emoji: "🏆" },
+            { hebrew: "מדליה",    emoji: "🏅" },
+            // Music & Art
+            { hebrew: "פסנתר",    emoji: "🎹" },
+            { hebrew: "חצוצרה",   emoji: "🎺" },
+            { hebrew: "כינור",    emoji: "🎻" },
+            { hebrew: "פלטה",     emoji: "🎨" },
+            { hebrew: "קלטת",     emoji: "📼" },
+            { hebrew: "רדיו",     emoji: "📻" },
+            // Nature
+            { hebrew: "עץ",       emoji: "🌳" },
+            { hebrew: "קקטוס",    emoji: "🌵" },
+            { hebrew: "פטל",      emoji: "🌹" },
+            { hebrew: "חמנייה",   emoji: "🌻" },
+            // Clothing / בגדים
+            { hebrew: "חולצה",    emoji: "👕" },
+            { hebrew: "מכנסיים",  emoji: "👖" },
+            { hebrew: "שמלה",     emoji: "👗" },
+            { hebrew: "סוודר",    emoji: "🧶" },
+            { hebrew: "מעיל",     emoji: "🧥" },
+            { hebrew: "כפפות",    emoji: "🧤" },
+            { hebrew: "צעיף",     emoji: "🧣" },
+            { hebrew: "חגורה",    emoji: "🪢" },
+            { hebrew: "תיק יד",   emoji: "👜" },
+            { hebrew: "ארנק",     emoji: "👛" },
+            { hebrew: "עניבה",    emoji: "👔" },
+            { hebrew: "סנדל",     emoji: "🩴" },
+            { hebrew: "גרביים",   emoji: "🧦" },
+            { hebrew: "קסדה",     emoji: "⛑️" },
+            { hebrew: "משקפת",    emoji: "🥽" },
+            // Transportation / כלי תחבורה
+            { hebrew: "אוטובוס",  emoji: "🚌" },
+            { hebrew: "משאית",    emoji: "🚛" },
+            { hebrew: "מונית",    emoji: "🚕" },
+            { hebrew: "אופנוע",   emoji: "🏍️" },
+            { hebrew: "קורקינט",  emoji: "🛴" },
+            { hebrew: "כבאית",    emoji: "🚒" },
+            { hebrew: "אמבולנס",  emoji: "🚑" },
+            { hebrew: "טרקטור",   emoji: "🚜" },
+            // Sports / ספורט
+            { hebrew: "כדורעף",   emoji: "🏐" },
+            { hebrew: "טניס",     emoji: "🎾" },
+            { hebrew: "בולינג",   emoji: "🎳" },
+            { hebrew: "גולף",     emoji: "⛳" },
+            { hebrew: "סקייטבורד",emoji: "🛹" },
+            { hebrew: "כפפת אגרוף",emoji: "🥊" },
+            { hebrew: "מדליון",   emoji: "🏅" },
+            { hebrew: "גלישה",    emoji: "🏄" },
+            { hebrew: "שחייה",    emoji: "🏊" },
+            { hebrew: "קשת",      emoji: "🏹" },
+            // School / בית ספר
+            { hebrew: "מחשב",     emoji: "💻" },
+            { hebrew: "לוח",      emoji: "🪣" },
+            { hebrew: "מחק",      emoji: "🧹" },
+            { hebrew: "סרגל",     emoji: "📏" },
+            { hebrew: "מחשבון",   emoji: "🧮" },
+            { hebrew: "תיק גב",   emoji: "🎒" },
+            { hebrew: "עט",       emoji: "🖊️" },
+            { hebrew: "מחברת",    emoji: "📓" },
+            { hebrew: "דף",       emoji: "📄" },
+            { hebrew: "גיר",      emoji: "🖍️" },
+            // Body / גוף
+            { hebrew: "עיניים",   emoji: "👀" },
+            { hebrew: "אף",       emoji: "👃" },
+            { hebrew: "אוזן",     emoji: "👂" },
+            { hebrew: "יד",       emoji: "✋" },
+            { hebrew: "רגל",      emoji: "🦵" },
+            { hebrew: "לשון",     emoji: "👅" },
+            { hebrew: "שיניים",   emoji: "🦷" },
+            { hebrew: "מוח",      emoji: "🧠" },
+            // Weather / מזג אוויר
+            { hebrew: "שלג",      emoji: "❄️" },
+            { hebrew: "ברק",      emoji: "⚡" },
+            { hebrew: "סופה",     emoji: "🌪️" },
+            { hebrew: "גשם",      emoji: "🌧️" },
+            { hebrew: "ערפל",     emoji: "🌫️" },
+            { hebrew: "שמש וענן", emoji: "⛅" },
+            { hebrew: "ברד",      emoji: "🌨️" },
+            // Kitchen / מטבח
+            { hebrew: "סכין",     emoji: "🔪" },
+            { hebrew: "מחבת",     emoji: "🍳" },
+            { hebrew: "מזלג",     emoji: "🍴" },
+            { hebrew: "כף",       emoji: "🥄" },
+            { hebrew: "קומקום",   emoji: "☕" },
+            { hebrew: "קערה",     emoji: "🫙" },
+            { hebrew: "בקבוק מים",emoji: "🧴" },
+            { hebrew: "פח אשפה",  emoji: "🗑️" },
+            { hebrew: "מקרר",     emoji: "🧊" },
+            { hebrew: "תנור",     emoji: "♨️" },
+            // Space / חלל
+            { hebrew: "פלנטה",    emoji: "🪐" },
+            { hebrew: "מטאור",    emoji: "☄️" },
+            { hebrew: "חליפת חלל",emoji: "🧑‍🚀" },
+            { hebrew: "לוויין",   emoji: "🛸" },
+            { hebrew: "שביט",     emoji: "💫" },
+            { hebrew: "גלקסיה",   emoji: "🌌" },
+            { hebrew: "פנס חלל",  emoji: "🔭" },
+            { hebrew: "אסטרואיד", emoji: "🌑" },
+            // More Animals / עוד חיות
+            { hebrew: "פיל",      emoji: "🐘" },
+            { hebrew: "גורילה",   emoji: "🦍" },
+            { hebrew: "זברה",     emoji: "🦓" },
+            { hebrew: "ג'ירפה",   emoji: "🦒" },
+            { hebrew: "קנגורו",   emoji: "🦘" },
+            { hebrew: "עטלף",     emoji: "🦇" },
+            { hebrew: "טווס",     emoji: "🦚" },
+            { hebrew: "תוכי",     emoji: "🦜" },
+            { hebrew: "עכבר",     emoji: "🐭" },
+            { hebrew: "פרה",      emoji: "🐮" },
+            { hebrew: "כבשה",     emoji: "🐑" },
+            { hebrew: "עז",       emoji: "🐐" },
+            // More Food / עוד אוכל
+            { hebrew: "המבורגר",  emoji: "🍔" },
+            { hebrew: "ביצה",     emoji: "🥚" },
+            { hebrew: "לחם",      emoji: "🍞" },
+            { hebrew: "גבינה",    emoji: "🧀" },
+            { hebrew: "סלט",      emoji: "🥗" },
+            { hebrew: "מרק",      emoji: "🍲" },
+            { hebrew: "צ'יפס",    emoji: "🍟" },
+            { hebrew: "פלאפל",    emoji: "🧆" },
+            { hebrew: "שוורמה",   emoji: "🌯" },
+            { hebrew: "אורז",     emoji: "🍚" },
+            { hebrew: "פסטה",     emoji: "🍝" },
+            { hebrew: "סושי",     emoji: "🍣" },
+        ];
+
+        // ===== CONFIG =====
+        const ROOM_SIZE = 8;
+        const TONGUE_SPEED = 0.06;
+        const TONGUE_RETRACT_SPEED = 0.08;
+
+        // ===== DOM =====
+        const container = document.getElementById('game-container');
+        const tongueCanvas = document.getElementById('tongue-canvas');
+        const tongueCtx = tongueCanvas.getContext('2d');
+        const targetWordEl = document.getElementById('target-word');
+        const scoreEl = document.getElementById('score-display');
+        const levelEl = document.getElementById('level-display');
+        const timerEl = document.getElementById('timer-display');
+        const progressEl = document.getElementById('progress-display');
+        const feedbackEl = document.getElementById('feedback-overlay');
+        const startScreen = document.getElementById('start-screen');
+        const levelCompleteScreen = document.getElementById('level-complete-screen');
+        const levelCompleteText = document.getElementById('level-complete-text');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const gameOverText = document.getElementById('game-over-text');
+        const restartBtn = document.getElementById('restart-btn');
+        const instructionsEl = document.getElementById('instructions');
+        const lizardMouth = document.getElementById('lizard-mouth');
+        const pupilLeft = document.getElementById('pupil-left');
+        const pupilRight = document.getElementById('pupil-right');
+        const playerNameInput = document.getElementById('player-name-input');
+        const startBtn = document.getElementById('start-btn');
+
+        // ===== STATE =====
+        const state = {
+            started: false,
+            score: 0,
+            objects: [],        // { item, sprite, originalPos }
+            targetItem: null,
+            prevTargetHebrew: null,
+            tongueState: 'idle', // idle | extending | retracting
+            tongueProgress: 0,
+            tongueTarget2D: null,
+            tongueTarget3D: null,
+            hitObject: null,
+            feedbackTimeout: null,
+            isDragging: false,
+            // Level system
+            level: 1,
+            levelTotalObjects: 0,
+            levelCaughtObjects: 0,
+            timeRemaining: 0,
+            timerActive: false,
+        };
+
+        // ===== THREE.JS SETUP =====
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 15, 25);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 4, 8);
+        camera.lookAt(0, 1, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.insertBefore(renderer.domElement, container.firstChild);
+
+        // ===== CONTROLS =====
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.minPolarAngle = Math.PI * 0.15;
+        controls.maxPolarAngle = Math.PI * 0.55;
+        controls.target.set(0, 1.5, 0);
+        controls.rotateSpeed = 0.5;
+        controls.dampingFactor = 0.08;
+        controls.enableDamping = true;
+
+        // Track dragging to distinguish from clicks (threshold-based for mobile)
+        let _ptrDownX = 0, _ptrDownY = 0;
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            state.isDragging = false;
+            _ptrDownX = e.clientX; _ptrDownY = e.clientY;
+        });
+        renderer.domElement.addEventListener('pointermove', (e) => {
+            const dx = e.clientX - _ptrDownX, dy = e.clientY - _ptrDownY;
+            if (Math.sqrt(dx*dx + dy*dy) > 10) state.isDragging = true;
+        });
+
+        // ===== LIGHTING =====
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(3, 8, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 20;
+        dirLight.shadow.camera.left = -6;
+        dirLight.shadow.camera.right = 6;
+        dirLight.shadow.camera.top = 6;
+        dirLight.shadow.camera.bottom = -6;
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0xFFE4B5, 0.4, 15);
+        pointLight.position.set(-2, 4, 0);
+        scene.add(pointLight);
+
+        // ===== BUILD ROOM =====
+        function buildRoom() {
+            // Floor
+            const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE * 2, ROOM_SIZE * 2);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x8B6914, roughness: 0.8, metalness: 0.1
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Floor planks (subtle lines)
+            for (let i = -ROOM_SIZE; i <= ROOM_SIZE; i += 1.2) {
+                const lineGeo = new THREE.PlaneGeometry(ROOM_SIZE * 2, 0.02);
+                const lineMat = new THREE.MeshBasicMaterial({ color: 0x7A5C10 });
+                const line = new THREE.Mesh(lineGeo, lineMat);
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(0, 0.005, i);
+                scene.add(line);
+            }
+
+            // Back wall
+            const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE * 2, ROOM_SIZE);
+            const wallMat = new THREE.MeshStandardMaterial({
+                color: 0xF5E6CA, roughness: 0.9, metalness: 0
+            });
+            const backWall = new THREE.Mesh(wallGeo, wallMat);
+            backWall.position.set(0, ROOM_SIZE / 2, -ROOM_SIZE);
+            backWall.receiveShadow = true;
+            scene.add(backWall);
+
+            // Left wall
+            const leftWall = new THREE.Mesh(wallGeo, wallMat.clone());
+            leftWall.position.set(-ROOM_SIZE, ROOM_SIZE / 2, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            leftWall.receiveShadow = true;
+            scene.add(leftWall);
+
+            // Right wall
+            const rightWall = new THREE.Mesh(wallGeo, wallMat.clone());
+            rightWall.position.set(ROOM_SIZE, ROOM_SIZE / 2, 0);
+            rightWall.rotation.y = -Math.PI / 2;
+            rightWall.receiveShadow = true;
+            scene.add(rightWall);
+
+            // Baseboard
+            const baseGeo = new THREE.BoxGeometry(ROOM_SIZE * 2, 0.2, 0.05);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+            const baseBack = new THREE.Mesh(baseGeo, baseMat);
+            baseBack.position.set(0, 0.1, -ROOM_SIZE + 0.025);
+            scene.add(baseBack);
+
+            // Window on back wall
+            const windowFrame = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 1.5, 0.1),
+                new THREE.MeshStandardMaterial({ color: 0xDEB887 })
+            );
+            windowFrame.position.set(0, 3, -ROOM_SIZE + 0.06);
+            scene.add(windowFrame);
+
+            const windowGlass = new THREE.Mesh(
+                new THREE.PlaneGeometry(1.6, 1.1),
+                new THREE.MeshBasicMaterial({ color: 0x87CEEB, transparent: true, opacity: 0.6 })
+            );
+            windowGlass.position.set(0, 3, -ROOM_SIZE + 0.12);
+            scene.add(windowGlass);
+
+            // Simple table
+            const tableMat = new THREE.MeshStandardMaterial({ color: 0x6D4C2A });
+            const tableTop = new THREE.Mesh(new THREE.BoxGeometry(3, 0.1, 1.5), tableMat);
+            tableTop.position.set(-2.5, 1.2, -2);
+            tableTop.castShadow = true;
+            tableTop.receiveShadow = true;
+            scene.add(tableTop);
+
+            // Table legs
+            const legGeo = new THREE.BoxGeometry(0.1, 1.2, 0.1);
+            [[-3.9, -2.65], [-3.9, -1.35], [-1.1, -2.65], [-1.1, -1.35]].forEach(([x, z]) => {
+                const leg = new THREE.Mesh(legGeo, tableMat);
+                leg.position.set(x, 0.6, z);
+                leg.castShadow = true;
+                scene.add(leg);
+            });
+
+            // Shelves on right wall
+            const shelfMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+            const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3.5), shelfMat);
+            shelf.position.set(ROOM_SIZE - 0.15, 2.2, -0.5);
+            shelf.castShadow = true;
+            scene.add(shelf);
+
+            const shelf2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3), shelfMat);
+            shelf2.position.set(ROOM_SIZE - 0.15, 3.2, 1);
+            shelf2.castShadow = true;
+            scene.add(shelf2);
+
+            // Shelves on left wall
+            const shelfL1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3.5), shelfMat);
+            shelfL1.position.set(-ROOM_SIZE + 0.15, 2.0, -0.5);
+            shelfL1.castShadow = true;
+            scene.add(shelfL1);
+
+            const shelfL2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 3), shelfMat);
+            shelfL2.position.set(-ROOM_SIZE + 0.15, 3.0, 0.5);
+            shelfL2.castShadow = true;
+            scene.add(shelfL2);
+
+            // Shelf on back wall (high)
+            const shelfBack = new THREE.Mesh(new THREE.BoxGeometry(7, 0.08, 0.3), shelfMat);
+            shelfBack.position.set(0, 3.3, -ROOM_SIZE + 0.2);
+            shelfBack.castShadow = true;
+            scene.add(shelfBack);
+
+            // Small cabinet on back wall
+            const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+            const cabinet = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 0.8), cabinetMat);
+            cabinet.position.set(5, 1, -ROOM_SIZE + 0.5);
+            cabinet.castShadow = true;
+            cabinet.receiveShadow = true;
+            scene.add(cabinet);
+
+            // Second small table on the right side
+            const table2Top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.08, 1.2), tableMat);
+            table2Top.position.set(4, 0.9, 2);
+            table2Top.castShadow = true;
+            scene.add(table2Top);
+        }
+
+        // ===== EMOJI SPRITES =====
+        function createEmojiTexture(emoji) {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.font = `${size * 0.75}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, size / 2, size / 2);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
+            return texture;
+        }
+
+        function createObjectSprite(item) {
+            const texture = createEmojiTexture(item.emoji);
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: true,
+                depthWrite: false,
+            });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(0.85, 0.85, 1);
+            sprite.userData = { item };
+            return sprite;
+        }
+
+        // ===== OBJECT PLACEMENT =====
+        const POSITIONS = [
+            // Floor - spread everywhere
+            { x: -1, y: 0.5, z: -1 },
+            { x: 1.5, y: 0.5, z: -2 },
+            { x: 0, y: 0.5, z: 1 },
+            { x: -3, y: 0.5, z: 1.5 },
+            { x: 3, y: 0.5, z: 0 },
+            { x: -1.5, y: 0.5, z: 3 },
+            { x: 2, y: 0.5, z: 2.5 },
+            { x: -4, y: 0.5, z: -3 },
+            { x: 0.5, y: 0.5, z: -4 },
+            { x: -5, y: 0.5, z: 0 },
+            { x: 4.5, y: 0.5, z: -1 },
+            { x: -2, y: 0.5, z: -5 },
+            { x: 3.5, y: 0.5, z: 3.5 },
+            { x: -4.5, y: 0.5, z: 3 },
+            { x: 5, y: 0.5, z: 2 },
+            { x: -6, y: 0.5, z: -2 },
+            { x: 1, y: 0.5, z: -6 },
+            { x: -3.5, y: 0.5, z: -6 },
+            { x: 6, y: 0.5, z: -4 },
+            { x: -1, y: 0.5, z: 5 },
+            // Table positions
+            { x: -3.5, y: 1.85, z: -2.3 },
+            { x: -2.8, y: 1.85, z: -1.7 },
+            { x: -2.0, y: 1.85, z: -2.1 },
+            { x: -3.0, y: 1.85, z: -2.5 },
+            { x: -1.5, y: 1.85, z: -1.9 },
+            // Right wall shelves
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: -1.8 },
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: -0.8 },
+            { x: ROOM_SIZE - 0.6, y: 2.75, z: 0.0 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 0.3 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 1.2 },
+            { x: ROOM_SIZE - 0.6, y: 3.75, z: 1.8 },
+            // Left wall shelves
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: -2 },
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: -0.5 },
+            { x: -ROOM_SIZE + 0.6, y: 2.5, z: 1 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: -1 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: 0.5 },
+            { x: -ROOM_SIZE + 0.6, y: 3.5, z: 2 },
+            // Back wall shelves (high up)
+            { x: -3, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: -1.5, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: 1.5, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: 3, y: 3.8, z: -ROOM_SIZE + 0.6 },
+            { x: -4.5, y: 2.2, z: -ROOM_SIZE + 0.6 },
+            { x: 4.5, y: 2.2, z: -ROOM_SIZE + 0.6 },
+            // Corners and hidden spots
+            { x: -ROOM_SIZE + 1, y: 0.5, z: -ROOM_SIZE + 1 },
+            { x: ROOM_SIZE - 1, y: 0.5, z: -ROOM_SIZE + 1 },
+            { x: -ROOM_SIZE + 1, y: 0.5, z: ROOM_SIZE - 2 },
+            { x: ROOM_SIZE - 1, y: 0.5, z: ROOM_SIZE - 2 },
+            // High floating positions (hanging from ceiling)
+            { x: 0, y: 5.5, z: 0 },
+            { x: -3, y: 5, z: -3 },
+            { x: 3, y: 5.2, z: 2 },
+            { x: -2, y: 4.5, z: 3 },
+            { x: 4, y: 4.8, z: -2 },
+        ];
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // Generate enough positions for any count, adding procedural ones if needed
+        function generatePositions(count) {
+            const base = shuffle([...POSITIONS]);
+            if (count <= base.length) return base.slice(0, count);
+
+            // Heights weighted toward floor for natural feel
+            const heights = [0.5, 0.5, 0.5, 0.5, 1.85, 2.5, 3.5, 4.5];
+            const all = [...base];
+            let attempts = 0;
+
+            while (all.length < count && attempts < count * 40) {
+                attempts++;
+                const y = heights[Math.floor(Math.random() * heights.length)];
+                const x = (Math.random() - 0.5) * 13; // within ±6.5
+                const z = (Math.random() - 0.5) * 13;
+                // Ensure minimum spacing in the horizontal plane
+                const tooClose = all.some(p => Math.hypot(p.x - x, p.z - z) < 1.2);
+                if (!tooClose) all.push({ x, y, z });
+            }
+            return all.slice(0, count);
+        }
+
+        // ===== LEVEL CONFIGURATION =====
+        function getLevelConfig(level) {
+            const toyCount = Math.min(20 + (level - 1) * 10, 200);
+            // Seconds per toy decreases as levels increase (harder pressure)
+            const secondsPerToy = Math.max(12 - (level - 1) * 0.4, 4);
+            return { toyCount, timeLimit: Math.round(toyCount * secondsPerToy) };
+        }
+
+        // ===== UI UPDATERS =====
+        function updateTimerDisplay() {
+            const secs = Math.ceil(state.timeRemaining);
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+            if (state.timeRemaining < 30) {
+                timerEl.classList.add('urgent');
+            } else {
+                timerEl.classList.remove('urgent');
+            }
+        }
+
+        function updateProgressDisplay() {
+            progressEl.textContent = `${state.levelCaughtObjects} / ${state.levelTotalObjects}`;
+        }
+
+        // ===== PICK NEXT TARGET FROM REMAINING OBJECTS =====
+        function pickNewTarget() {
+            if (state.objects.length === 0) {
+                showLevelComplete();
+                return;
+            }
+            // Avoid repeating the same word if possible
+            const pool = state.objects.filter(o => o.item.hebrew !== state.prevTargetHebrew);
+            const pick = pool.length > 0 ? pool : state.objects;
+            state.targetItem = pick[Math.floor(Math.random() * pick.length)].item;
+            state.prevTargetHebrew = state.targetItem.hebrew;
+            targetWordEl.textContent = state.targetItem.hebrew;
+            targetWordEl.classList.add('visible');
+            updateProgressDisplay();
+        }
+
+        // ===== START LEVEL =====
+        function startLevel(level) {
+            // Hide any overlay screens
+            levelCompleteScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+
+            state.level = level;
+            state.tongueState = 'idle';
+            state.tongueProgress = 0;
+            state.hitObject = null;
+            state.prevTargetHebrew = null;
+
+            const { toyCount, timeLimit } = getLevelConfig(level);
+
+            // Remove old sprites
+            state.objects.forEach(o => scene.remove(o.sprite));
+            state.objects = [];
+
+            // Pick toyCount unique items
+            const shuffledItems = shuffle(ITEMS).slice(0, toyCount);
+
+            // Place them with generated positions
+            const positions = generatePositions(toyCount);
+            shuffledItems.forEach((item, i) => {
+                const sprite = createObjectSprite(item);
+                const pos = positions[i];
+                sprite.position.set(pos.x, pos.y, pos.z);
+                scene.add(sprite);
+                state.objects.push({
+                    item, sprite,
+                    originalPos: new THREE.Vector3(pos.x, pos.y, pos.z),
+                });
+            });
+
+            // Set level state
+            state.levelTotalObjects = toyCount;
+            state.levelCaughtObjects = 0;
+            state.timeRemaining = timeLimit;
+            state.timerActive = true;
+            state.started = true;
+
+            // Update UI
+            levelEl.textContent = `שלב ${level}`;
+            updateTimerDisplay();
+            pickNewTarget();
+        }
+
+        // ===== LEVEL COMPLETE =====
+        function showLevelComplete() {
+            state.timerActive = false;
+            targetWordEl.classList.remove('visible');
+            levelCompleteText.textContent = `סיימת את שלב ${state.level}! 🎉`;
+            levelCompleteScreen.style.display = 'flex';
+        }
+
+        // ===== GAME OVER =====
+        function showGameOver() {
+            state.timerActive = false;
+            state.tongueState = 'idle';
+            targetWordEl.classList.remove('visible');
+            gameOverText.textContent = `הגעת לשלב ${state.level} | ניקוד: ${state.score} ⭐`;
+            gameOverScreen.style.display = 'flex';
+
+            // Submit score to parent Next.js app via postMessage
+            const playerName = (playerNameInput && playerNameInput.value.trim()) || 'אנונימי';
+            window.parent.postMessage({
+                type: 'GAME_OVER',
+                player_name: playerName,
+                score: state.score,
+                max_level: state.level,
+            }, '*');
+        }
+
+        // ===== RAYCASTER =====
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        function onGameClick(event) {
+            if (!state.started || state.tongueState !== 'idle' || state.isDragging) return;
+            if (!state.timerActive) return; // Don't allow clicks on overlay screens
+
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+            const sprites = state.objects.map(o => o.sprite);
+            const intersects = raycaster.intersectObjects(sprites);
+
+            if (intersects.length > 0) {
+                const hitSprite = intersects[0].object;
+                const hitObj = state.objects.find(o => o.sprite === hitSprite);
+                if (!hitObj) return;
+
+                state.hitObject = hitObj;
+
+                // Project 3D position to 2D screen
+                const vec = hitSprite.position.clone();
+                vec.project(camera);
+                state.tongueTarget2D = {
+                    x: (vec.x * 0.5 + 0.5) * window.innerWidth,
+                    y: (-vec.y * 0.5 + 0.5) * window.innerHeight,
+                };
+
+                state.tongueState = 'extending';
+                state.tongueProgress = 0;
+            }
+        }
+
+        renderer.domElement.addEventListener('click', onGameClick);
+
+        // Explicit touch support for mobile (touchend fires before click delay)
+        renderer.domElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!state.isDragging && e.changedTouches.length > 0) {
+                const t = e.changedTouches[0];
+                onGameClick({ clientX: t.clientX, clientY: t.clientY });
+            }
+        }, { passive: false });
+
+        // ===== TONGUE ANIMATION =====
+        function getMouthScreenPos() {
+            const rect = lizardMouth.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+            };
+        }
+
+        function updateTongue(dt) {
+            if (state.tongueState === 'idle') return;
+
+            if (state.tongueState === 'extending') {
+                state.tongueProgress += TONGUE_SPEED * dt;
+                if (state.tongueProgress >= 1) {
+                    state.tongueProgress = 1;
+                    // Check if correct
+                    const hitItem = state.hitObject.item;
+                    if (hitItem.hebrew === state.targetItem.hebrew) {
+                        showFeedback('correct');
+                        state.score++;
+                        scoreEl.textContent = state.score + ' ⭐';
+                        state.levelCaughtObjects++;
+                    } else {
+                        showFeedback('wrong');
+                    }
+                    state.tongueState = 'retracting';
+                }
+            } else if (state.tongueState === 'retracting') {
+                state.tongueProgress -= TONGUE_RETRACT_SPEED * dt;
+                if (state.tongueProgress <= 0) {
+                    state.tongueProgress = 0;
+                    state.tongueState = 'idle';
+
+                    const wasCorrect = state.hitObject &&
+                        state.hitObject.item.hebrew === state.targetItem.hebrew;
+
+                    if (wasCorrect) {
+                        // Remove caught toy from scene and list
+                        scene.remove(state.hitObject.sprite);
+                        state.objects = state.objects.filter(o => o !== state.hitObject);
+                    }
+                    state.hitObject = null;
+
+                    if (wasCorrect) {
+                        pickNewTarget(); // may trigger showLevelComplete() if room empty
+                    }
+                }
+            }
+        }
+
+        function drawTongue() {
+            tongueCtx.clearRect(0, 0, tongueCanvas.width, tongueCanvas.height);
+            if (state.tongueState === 'idle' || !state.tongueTarget2D) return;
+
+            const mouth = getMouthScreenPos();
+            const target = state.tongueTarget2D;
+            const dpr = window.devicePixelRatio || 1;
+
+            const tipX = mouth.x + (target.x - mouth.x) * state.tongueProgress;
+            const tipY = mouth.y + (target.y - mouth.y) * state.tongueProgress;
+
+            // Tongue line
+            tongueCtx.save();
+            tongueCtx.lineWidth = 6 * dpr;
+            tongueCtx.strokeStyle = '#E84057';
+            tongueCtx.lineCap = 'round';
+            tongueCtx.beginPath();
+            tongueCtx.moveTo(mouth.x * dpr, mouth.y * dpr);
+            tongueCtx.lineTo(tipX * dpr, tipY * dpr);
+            tongueCtx.stroke();
+
+            // Tongue tip
+            tongueCtx.fillStyle = '#C62828';
+            tongueCtx.beginPath();
+            tongueCtx.arc(tipX * dpr, tipY * dpr, 8 * dpr, 0, Math.PI * 2);
+            tongueCtx.fill();
+
+            // If retracting after correct hit, draw emoji following tongue
+            if (state.tongueState === 'retracting' && state.hitObject &&
+                state.hitObject.item.hebrew === state.targetItem.hebrew) {
+                tongueCtx.font = `${40 * dpr}px serif`;
+                tongueCtx.textAlign = 'center';
+                tongueCtx.textBaseline = 'middle';
+                tongueCtx.fillText(state.hitObject.item.emoji, tipX * dpr, tipY * dpr);
+                // Hide the 3D sprite while retracting
+                state.hitObject.sprite.visible = false;
+            }
+
+            tongueCtx.restore();
+        }
+
+        // ===== FEEDBACK =====
+        function showFeedback(type) {
+            if (state.feedbackTimeout) clearTimeout(state.feedbackTimeout);
+            feedbackEl.className = type;
+            state.feedbackTimeout = setTimeout(() => {
+                feedbackEl.className = '';
+            }, 300);
+        }
+
+        // ===== EYE TRACKING =====
+        function updateEyes(mouseX, mouseY) {
+            const maxOffset = 4;
+            [pupilLeft, pupilRight].forEach(pupil => {
+                const eyeRect = pupil.parentElement.getBoundingClientRect();
+                const eyeCX = eyeRect.left + eyeRect.width / 2;
+                const eyeCY = eyeRect.top + eyeRect.height / 2;
+                const dx = mouseX - eyeCX;
+                const dy = mouseY - eyeCY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamp = Math.min(dist, maxOffset * 20) / (maxOffset * 20) * maxOffset;
+                const ox = (dx / (dist || 1)) * clamp;
+                const oy = (dy / (dist || 1)) * clamp;
+                pupil.style.transform = `translate(calc(-50% + ${ox}px), calc(-50% + ${oy}px))`;
+            });
+        }
+
+        window.addEventListener('mousemove', (e) => updateEyes(e.clientX, e.clientY));
+
+        // ===== RESIZE =====
+        function onResize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+
+            const dpr = window.devicePixelRatio || 1;
+            tongueCanvas.width = w * dpr;
+            tongueCanvas.height = h * dpr;
+            tongueCanvas.style.width = w + 'px';
+            tongueCanvas.style.height = h + 'px';
+        }
+        window.addEventListener('resize', onResize);
+        onResize();
+
+        // ===== GAME LOOP =====
+        let lastTime = 0;
+        function gameLoop(time) {
+            requestAnimationFrame(gameLoop);
+            const dt = Math.min((time - lastTime) / 16.67, 3); // normalize to ~60fps
+            lastTime = time;
+
+            if (!state.started) {
+                renderer.render(scene, camera);
+                return;
+            }
+
+            // Timer countdown
+            if (state.timerActive && dt > 0) {
+                state.timeRemaining -= dt / 60; // dt/60 = actual seconds per frame
+                if (state.timeRemaining <= 0) {
+                    state.timeRemaining = 0;
+                    state.timerActive = false;
+                    updateTimerDisplay();
+                    showGameOver();
+                } else {
+                    updateTimerDisplay();
+                }
+            }
+
+            controls.update();
+            updateTongue(dt);
+            renderer.render(scene, camera);
+            drawTongue();
+        }
+
+        // ===== INIT =====
+        buildRoom();
+
+        // Show room preview behind start screen
+        renderer.render(scene, camera);
+
+        // Start screen - use button to avoid triggering on input click
+        startBtn.addEventListener('click', () => {
+            if (playerNameInput && !playerNameInput.value.trim()) {
+                playerNameInput.style.border = '2px solid #ff4444';
+                playerNameInput.placeholder = 'חובה להכניס שם!';
+                setTimeout(() => {
+                    playerNameInput.style.border = '2px solid rgba(255,200,0,0.6)';
+                    playerNameInput.placeholder = 'הכנס את שמך';
+                }, 1500);
+                return;
+            }
+            startScreen.style.display = 'none';
+            startLevel(1);
+            instructionsEl.classList.add('visible');
+            setTimeout(() => instructionsEl.classList.remove('visible'), 4000);
+        });
+
+        // Level complete → next level
+        nextLevelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startLevel(state.level + 1);
+        });
+        levelCompleteScreen.addEventListener('click', () => {
+            startLevel(state.level + 1);
+        });
+
+        // Game over → restart from level 1
+        restartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.score = 0;
+            scoreEl.textContent = '0 ⭐';
+            startLevel(1);
+        });
+        gameOverScreen.addEventListener('click', () => {
+            state.score = 0;
+            scoreEl.textContent = '0 ⭐';
+            startLevel(1);
+        });
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
