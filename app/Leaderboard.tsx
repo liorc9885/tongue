@@ -24,7 +24,7 @@ export default function Leaderboard() {
         disabled={isPending}
         style={{
           position: 'fixed',
-          top: '96px',
+          top: '110px',
           right: '20px',
           zIndex: 1000,
           background: 'rgba(0,0,0,0.75)',
