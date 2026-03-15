@@ -907,10 +907,16 @@
             state.paused = !state.paused;
             if (state.paused) {
                 state.timerActive = false;
+                controls.enabled = false;
+                state.objects.forEach(o => { o.sprite.visible = false; });
                 pauseOverlay.classList.add('visible');
                 pauseBtn.textContent = '▶';
             } else {
                 state.timerActive = true;
+                controls.enabled = true;
+                state.objects.forEach(o => {
+                    if (o !== state.hitObject) o.sprite.visible = true;
+                });
                 pauseOverlay.classList.remove('visible');
                 pauseBtn.textContent = '⏸';
             }
