@@ -421,7 +421,7 @@
     <div id="admin-code-widget">
         <div id="admin-code-entry">
             <input id="admin-code-input" type="password" placeholder="••••••••" autocomplete="off">
-            <button id="admin-code-submit" onclick="checkAdminCode()">אישור</button>
+            <button id="admin-code-submit">אישור</button>
         </div>
     </div>
 
@@ -438,8 +438,7 @@
                 <button class="admin-choice" data-action="time:300">+5 דק'</button>
             </div>
             <div class="admin-row">
-                <input id="admin-time-input" type="number" placeholder="שניות" min="1"
-                       oninput="selectAdminActionFromInput('time-custom', this)">
+                <input id="admin-time-input" type="number" placeholder="שניות" min="1">
             </div>
         </section>
 
@@ -450,8 +449,7 @@
                 <button class="admin-choice" data-action="level:+1">שלב הבא</button>
             </div>
             <div class="admin-row">
-                <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב"
-                       oninput="selectAdminActionFromInput('level-custom', this)">
+                <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב">
             </div>
         </section>
 
@@ -464,8 +462,8 @@
         </section>
 
         <div class="admin-row" style="margin-top:6px; gap:8px;">
-            <button id="admin-confirm-btn" onclick="executeAdminAction()" disabled>✅ בצע</button>
-            <button id="admin-close-btn" onclick="closeAdminPanel()">סגור ✕</button>
+            <button id="admin-confirm-btn" disabled>✅ בצע</button>
+            <button id="admin-close-btn">סגור ✕</button>
         </div>
     </div>
 
@@ -1553,79 +1551,79 @@
         const adminPanel = document.getElementById('admin-panel');
         const adminCodeWidget = document.getElementById('admin-code-widget');
         const adminCodeInput = document.getElementById('admin-code-input');
+        const adminCodeSubmit = document.getElementById('admin-code-submit');
+        const adminConfirmBtn = document.getElementById('admin-confirm-btn');
+        const adminCloseBtn = document.getElementById('admin-close-btn');
+        const adminTimeInput = document.getElementById('admin-time-input');
+        const adminLevelInput = document.getElementById('admin-level-input');
 
-        // הצג את ווידג'ט הקוד כשהמשחק מתחיל
+        let timeFrozen = false;
+        let selectedAction = null;
+
         function showAdminWidget() {
             adminCodeWidget.style.display = 'flex';
         }
 
-        // בדיקת קוד מהשדה
         function checkAdminCode() {
             if (adminCodeInput.value === ADMIN_CODE) {
                 adminCodeInput.value = '';
                 openAdminPanel();
             } else {
                 adminCodeInput.style.borderColor = 'rgba(255,80,80,0.7)';
-                setTimeout(() => { adminCodeInput.style.borderColor = 'rgba(255,200,0,0.3)'; }, 800);
+                setTimeout(() => { adminCodeInput.style.borderColor = ''; }, 800);
                 adminCodeInput.value = '';
             }
         }
 
-        adminCodeInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); checkAdminCode(); }
-        });
-
-        let timeFrozen = false;
-        let selectedAction = null; // { type, value }
-
         function openAdminPanel() {
-            if (state.timerActive) state.timerActive = false;
-            // reset selection
+            state.timerActive = false;
             selectedAction = null;
             document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
-            document.getElementById('admin-confirm-btn').disabled = true;
-            document.getElementById('admin-time-input').value = '';
-            document.getElementById('admin-level-input').value = '';
+            adminConfirmBtn.disabled = true;
+            adminTimeInput.value = '';
+            adminLevelInput.value = '';
             adminPanel.style.display = 'flex';
         }
 
-        // wire choice buttons
-        document.querySelectorAll('.admin-choice').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedAction = { type: 'preset', action: btn.dataset.action };
-                document.getElementById('admin-confirm-btn').disabled = false;
-            });
-        });
+        function closeAdminPanel() {
+            adminPanel.style.display = 'none';
+            if (state.started && !state.paused && state.timeRemaining > 0 && !timeFrozen) {
+                state.timerActive = true;
+            }
+        }
 
-        function selectAdminActionFromInput(type, inputEl) {
+        function selectFromInput(type, inputEl) {
             const val = parseInt(inputEl.value);
             if (!val || val <= 0) {
                 selectedAction = null;
-                document.getElementById('admin-confirm-btn').disabled = true;
+                adminConfirmBtn.disabled = true;
                 return;
             }
             document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
             selectedAction = { type, value: val };
-            document.getElementById('admin-confirm-btn').disabled = false;
+            adminConfirmBtn.disabled = false;
         }
 
         function executeAdminAction() {
             if (!selectedAction) return;
 
             if (selectedAction.type === 'preset') {
-                const [cat, val] = selectedAction.action.split(':');
+                const colonIdx = selectedAction.action.indexOf(':');
+                const cat = colonIdx >= 0 ? selectedAction.action.slice(0, colonIdx) : selectedAction.action;
+                const val = colonIdx >= 0 ? selectedAction.action.slice(colonIdx + 1) : '';
+
                 if (cat === 'time') {
-                    if (state.started) {
-                        state.timeRemaining += parseInt(val);
-                        updateTimerDisplay();
-                    }
+                    state.timeRemaining += parseInt(val);
+                    updateTimerDisplay();
                     closeAdminPanel();
                 } else if (cat === 'level') {
-                    const delta = parseInt(val);
-                    const target = Math.max(1, state.level + delta);
+                    const target = Math.max(1, state.level + parseInt(val));
                     closeAdminPanel();
+                    if (!state.started) {
+                        state.score = 0;
+                        scoreEl.textContent = '0 ⭐';
+                        startScreen.style.display = 'none';
+                    }
                     startLevel(target);
                 } else if (cat === 'freeze') {
                     timeFrozen = true;
@@ -1637,29 +1635,40 @@
                     closeAdminPanel();
                 }
             } else if (selectedAction.type === 'time-custom') {
-                if (state.started) {
-                    state.timeRemaining += selectedAction.value;
-                    updateTimerDisplay();
-                }
+                state.timeRemaining += selectedAction.value;
+                updateTimerDisplay();
                 closeAdminPanel();
             } else if (selectedAction.type === 'level-custom') {
-                const level = selectedAction.value;
                 if (!state.started) {
                     state.score = 0;
                     scoreEl.textContent = '0 ⭐';
                     startScreen.style.display = 'none';
                 }
+                const lvl = selectedAction.value;
                 closeAdminPanel();
-                startLevel(level);
+                startLevel(lvl);
             }
         }
 
-        function closeAdminPanel() {
-            adminPanel.style.display = 'none';
-            if (state.started && !state.paused && state.timeRemaining > 0 && !timeFrozen) {
-                state.timerActive = true;
-            }
-        }
+        // === wire all admin event listeners ===
+        adminCodeSubmit.addEventListener('click', checkAdminCode);
+        adminCodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); checkAdminCode(); }
+        });
+
+        document.querySelectorAll('.admin-choice').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.admin-choice').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedAction = { type: 'preset', action: btn.dataset.action };
+                adminConfirmBtn.disabled = false;
+            });
+        });
+
+        adminTimeInput.addEventListener('input', () => selectFromInput('time-custom', adminTimeInput));
+        adminLevelInput.addEventListener('input', () => selectFromInput('level-custom', adminLevelInput));
+        adminConfirmBtn.addEventListener('click', executeAdminAction);
+        adminCloseBtn.addEventListener('click', closeAdminPanel);
 
         requestAnimationFrame(gameLoop);
     </script>
