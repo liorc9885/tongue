@@ -2,13 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>משחק הלשון 🦎</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #1a1a2e; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+        body { overflow: hidden; background: #1a1a2e; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; height: 100vh; height: 100dvh; height: calc(var(--vh, 1vh) * 100); }
 
-        #game-container { position: relative; width: 100vw; height: 100vh; }
+        #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; height: calc(var(--vh, 1vh) * 100); }
 
         #three-canvas { display: block; width: 100%; height: 100%; }
 
@@ -204,18 +204,22 @@
         #instructions.visible { opacity: 1; }
 
         @media (max-width: 600px) {
+            /* הקטנה של 10% אוטומטית בטלפון */
+            #game-container { zoom: 0.9; }
+
             #target-word { font-size: 28px; padding: 8px 20px; margin-top: 8px; }
             #score-display { font-size: 20px; top: 10px; left: 10px; }
             #level-display { font-size: 18px; top: 10px; right: 10px; }
             #timer-display { font-size: 15px; top: 48px; right: 10px; }
-            #progress-display { font-size: 15px; bottom: 15px; }
-            #pause-btn { width: 42px; height: 42px; font-size: 18px; bottom: 15px; right: 15px; }
+            /* הזזת אלמנטי תחתית מעל ה-home indicator של iOS */
+            #progress-display { font-size: 15px; bottom: calc(15px + env(safe-area-inset-bottom, 0px)); }
+            #pause-btn { width: 42px; height: 42px; font-size: 18px; bottom: calc(15px + env(safe-area-inset-bottom, 0px)); right: 15px; }
             #lizard-container { width: 90px; height: 60px; margin-top: 6px; }
             #lizard-body { width: 75px; height: 42px; }
             .overlay-screen h1 { font-size: 40px; }
             .overlay-screen .subtitle { font-size: 18px; margin-bottom: 25px; }
             .overlay-screen .start-btn { font-size: 22px; padding: 12px 35px; }
-            #instructions { font-size: 11px; bottom: 10px; }
+            #instructions { font-size: 11px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
         }
     </style>
 </head>
@@ -287,6 +291,13 @@
     </script>
 
     <script type="module">
+        // Fix mobile viewport height (100vh bug in iOS Safari / Android Chrome)
+        function setViewportHeight() {
+            document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+        }
+        setViewportHeight();
+        window.addEventListener('resize', setViewportHeight);
+
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 

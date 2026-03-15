@@ -33,8 +33,11 @@ export default function GameWrapper() {
     <iframe
       src="/game/index.html"
       style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
         border: 'none',
         display: 'block',
       }}
