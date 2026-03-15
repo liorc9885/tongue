@@ -301,51 +301,28 @@
             background: rgba(200,50,50,0.45) !important;
         }
 
-        /* ===== ווידג'ט קוד אדמין ===== */
+        /* ===== ווידג'ט כניסה לאדמין ===== */
         #admin-code-widget {
             position: fixed;
             bottom: 16px;
             left: 16px;
             z-index: 8000;
-            direction: rtl;
             display: none;
-            flex-direction: column;
-            gap: 4px;
-        }
-        #admin-code-label {
-            font-size: 11px;
-            color: rgba(255, 200, 0, 0.6);
-            font-family: monospace;
-            user-select: none;
-        }
-        #admin-code-entry {
-            display: flex;
-            gap: 5px;
-            align-items: center;
         }
         #admin-code-entry input {
-            background: rgba(0,0,0,0.45);
-            border: 1px solid rgba(255,200,0,0.3);
-            color: #ffe066;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,200,0,0.2);
+            color: transparent;
+            caret-color: rgba(255,200,0,0.5);
             border-radius: 7px;
             padding: 4px 8px;
             font-size: 13px;
-            width: 110px;
+            width: 80px;
             font-family: monospace;
             outline: none;
         }
-        #admin-code-entry button {
-            background: rgba(255,200,0,0.15);
-            border: 1px solid rgba(255,200,0,0.35);
-            color: #ffe066;
-            border-radius: 7px;
-            padding: 4px 9px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        #admin-code-entry button:hover {
-            background: rgba(255,200,0,0.3);
+        #admin-code-entry input:focus {
+            border-color: rgba(255,200,0,0.45);
         }
     </style>
 </head>
@@ -407,37 +384,51 @@
         </div>
     </div>
 
-    <!-- ווידג'ט קוד אדמין -->
+    <!-- ווידג'ט כניסה לאדמין -->
     <div id="admin-code-widget">
-        <div id="admin-code-label">קוד אדמין: Liorc9885</div>
         <div id="admin-code-entry">
-            <input id="admin-code-input" type="text" placeholder="הקלד קוד..." autocomplete="off">
-            <button onclick="checkAdminCode()">אישור</button>
+            <input id="admin-code-input" type="password" placeholder="••••••••" autocomplete="off">
         </div>
     </div>
 
-    <!-- פאנל אדמין סודי -->
+    <!-- פאנל אדמין -->
     <div id="admin-panel" style="display:none">
         <h2>🔧 פאנל אדמין</h2>
+
         <section>
-            <label>הוסף זמן לשלב הנוכחי</label>
+            <label>⏱ הארכת זמן</label>
             <div class="admin-row">
                 <button onclick="adminAddTime(30)">+30 שנ'</button>
-                <button onclick="adminAddTime(60)">+60 שנ'</button>
+                <button onclick="adminAddTime(60)">+1 דק'</button>
                 <button onclick="adminAddTime(120)">+2 דק'</button>
+                <button onclick="adminAddTime(300)">+5 דק'</button>
             </div>
             <div class="admin-row">
                 <input id="admin-time-input" type="number" placeholder="שניות" min="1">
                 <button onclick="adminAddCustomTime()">הוסף</button>
             </div>
         </section>
+
         <section>
-            <label>קפוץ לשלב</label>
+            <label>🎯 דילוג לשלב</label>
+            <div class="admin-row">
+                <button onclick="adminJumpRelative(-1)">שלב קודם</button>
+                <button onclick="adminJumpRelative(1)">שלב הבא</button>
+            </div>
             <div class="admin-row">
                 <input id="admin-level-input" type="number" min="1" placeholder="מספר שלב">
                 <button onclick="adminJumpToLevel()">קפוץ</button>
             </div>
         </section>
+
+        <section>
+            <label>⚙️ שונות</label>
+            <div class="admin-row">
+                <button onclick="adminFreezeTime()">⏸ הקפא זמן</button>
+                <button onclick="adminUnfreezeTime()">▶ שחרר זמן</button>
+            </div>
+        </section>
+
         <button id="admin-close-btn" onclick="closeAdminPanel()">סגור ✕</button>
     </div>
 
@@ -1554,7 +1545,7 @@
 
         function closeAdminPanel() {
             adminPanel.style.display = 'none';
-            if (state.started && !state.paused && state.timeRemaining > 0) {
+            if (state.started && !state.paused && state.timeRemaining > 0 && !timeFrozen) {
                 state.timerActive = true;
             }
         }
@@ -1579,13 +1570,29 @@
                 document.getElementById('admin-level-input').value = '';
                 closeAdminPanel();
                 if (!state.started) {
-                    // אם המשחק לא התחיל — מתחיל עם השם הנוכחי
-                    const pName = (playerNameInput && playerNameInput.value.trim()) || 'אדמין';
                     state.score = 0;
                     scoreEl.textContent = '0 ⭐';
                     startScreen.style.display = 'none';
                 }
                 startLevel(level);
+            }
+        }
+
+        function adminJumpRelative(delta) {
+            const target = Math.max(1, state.level + delta);
+            closeAdminPanel();
+            startLevel(target);
+        }
+
+        let timeFrozen = false;
+        function adminFreezeTime() {
+            timeFrozen = true;
+            state.timerActive = false;
+        }
+        function adminUnfreezeTime() {
+            timeFrozen = false;
+            if (state.started && !state.paused && state.timeRemaining > 0) {
+                state.timerActive = true;
             }
         }
 
