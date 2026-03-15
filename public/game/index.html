@@ -360,15 +360,20 @@
 
         @media (max-width: 480px) {
             #admin-panel {
-                width: 200px;
-                padding: 10px 12px;
+                width: 190px;
+                padding: 8px 10px;
+                gap: 6px;
                 bottom: 8px;
                 left: 8px;
+                max-height: 85vh;
+                overflow-y: auto;
             }
-            #admin-panel h2 { font-size: 14px; }
-            #admin-panel button { font-size: 11px; padding: 4px 7px; }
-            #admin-panel label { font-size: 11px; }
-            #admin-panel input[type="number"] { font-size: 11px; width: 60px; }
+            #admin-panel h2 { font-size: 13px; margin-bottom: 4px; padding-bottom: 4px; }
+            #admin-panel section { gap: 3px; }
+            #admin-panel .admin-row { gap: 4px; }
+            #admin-panel button { font-size: 10px; padding: 3px 6px; }
+            #admin-panel label { font-size: 10px; }
+            #admin-panel input[type="number"] { font-size: 10px; width: 55px; padding: 3px 6px; }
         }
     </style>
 </head>
