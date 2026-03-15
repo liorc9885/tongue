@@ -232,6 +232,7 @@
                 style="margin-bottom:16px;padding:10px 18px;font-size:20px;border-radius:12px;border:2px solid rgba(255,200,0,0.6);background:rgba(0,0,0,0.5);color:#fff;text-align:center;direction:rtl;outline:none;width:220px;"
             />
             <div class="start-btn" id="start-btn">לחץ להתחיל</div>
+            <div class="start-btn" id="resume-btn" style="display:none;font-size:22px;padding:10px 30px;margin-top:8px;border-color:rgba(100,220,100,0.7);color:#aaffaa;">המשך משלב <span id="resume-level-text"></span></div>
         </div>
 
         <div id="level-complete-screen" class="overlay-screen" style="display:none">
@@ -891,6 +892,15 @@
             gameOverScreen.style.display = 'none';
 
             state.level = level;
+
+            // שמירת התקדמות לחזרה לאחר יציאה
+            const _pName = (playerNameInput && playerNameInput.value.trim()) || 'אנונימי';
+            localStorage.setItem('tongue_saved_game', JSON.stringify({
+                level: level,
+                score: state.score,
+                playerName: _pName
+            }));
+
             state.tongueState = 'idle';
             state.tongueProgress = 0;
             state.hitObject = null;
@@ -943,6 +953,7 @@
         function showGameOver() {
             state.timerActive = false;
             state.tongueState = 'idle';
+            localStorage.removeItem('tongue_saved_game');
             targetWordEl.classList.remove('visible');
             gameOverText.textContent = `הגעת לשלב ${state.level} | ניקוד: ${state.score} ⭐`;
             gameOverScreen.style.display = 'flex';
@@ -1192,6 +1203,42 @@
         const savedName = localStorage.getItem('tongue_player_name');
         if (savedName && playerNameInput) {
             playerNameInput.value = savedName;
+        }
+
+        // בדיקת משחק שמור — הצגת כפתור המשך אם קיים
+        const savedGame = localStorage.getItem('tongue_saved_game');
+        const resumeBtn = document.getElementById('resume-btn');
+        const resumeLevelText = document.getElementById('resume-level-text');
+        if (savedGame && resumeBtn) {
+            try {
+                const parsed = JSON.parse(savedGame);
+                if (parsed.level > 1 || parsed.score > 0) {
+                    resumeLevelText.textContent = parsed.level;
+                    resumeBtn.style.display = 'block';
+                    if (parsed.playerName && playerNameInput && !playerNameInput.value.trim()) {
+                        playerNameInput.value = parsed.playerName;
+                    }
+                }
+            } catch(e) { localStorage.removeItem('tongue_saved_game'); }
+        }
+
+        // מאזין לכפתור המשך
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => {
+                const saved = JSON.parse(localStorage.getItem('tongue_saved_game') || '{}');
+                if (!saved.level) return;
+                const name = (playerNameInput && playerNameInput.value.trim()) || saved.playerName || 'אנונימי';
+                if (!name) {
+                    playerNameInput.style.border = '2px solid #ff4444';
+                    return;
+                }
+                localStorage.setItem('tongue_player_name', name);
+                state.score = saved.score || 0;
+                startScreen.style.display = 'none';
+                startLevel(saved.level);
+                instructionsEl.classList.add('visible');
+                setTimeout(() => instructionsEl.classList.remove('visible'), 4000);
+            });
         }
 
         // Start screen - use button to avoid triggering on input click
