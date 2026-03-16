@@ -140,6 +140,18 @@
         }
         #pause-btn:hover { background: rgba(0,0,0,0.85); }
 
+        #exit-btn {
+            position: absolute; bottom: 20px; left: 20px;
+            z-index: 25; pointer-events: auto;
+            background: rgba(0,0,0,0.6); border: 2px solid rgba(255,107,107,0.7);
+            color: #ff6b6b; font-size: 22px;
+            width: 50px; height: 50px; border-radius: 50%;
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        #exit-btn:hover { background: rgba(0,0,0,0.85); }
+
         #pause-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(10,10,30,0.75); z-index: 90;
@@ -387,6 +399,7 @@
         <div id="feedback-overlay"></div>
         <div id="pause-overlay">⏸ מושהה</div>
         <button id="pause-btn" style="display:none;">⏸</button>
+        <button id="exit-btn" style="display:none;">✕</button>
 
         <div id="instructions">גרור כדי לסובב את החדר | לחץ על החפץ הנכון</div>
 
@@ -724,6 +737,7 @@
         const progressEl = document.getElementById('progress-display');
         const feedbackEl = document.getElementById('feedback-overlay');
         const pauseBtn = document.getElementById('pause-btn');
+        const exitBtn = document.getElementById('exit-btn');
         const pauseOverlay = document.getElementById('pause-overlay');
         const startScreen = document.getElementById('start-screen');
         const levelCompleteScreen = document.getElementById('level-complete-screen');
@@ -1121,6 +1135,7 @@
             }
         }
         pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePause(); });
+        exitBtn.addEventListener('click', (e) => { e.stopPropagation(); showExitGame(); });
 
         // ===== PICK NEXT TARGET FROM REMAINING OBJECTS =====
         function pickNewTarget() {
@@ -1193,10 +1208,11 @@
             levelEl.textContent = `שלב ${level}`;
             updateTimerDisplay();
             pickNewTarget();
-            // Show pause button
+            // Show pause and exit buttons
             state.paused = false;
             pauseBtn.style.display = 'flex';
             pauseBtn.textContent = '⏸';
+            exitBtn.style.display = 'flex';
             pauseOverlay.classList.remove('visible');
         }
 
@@ -1222,6 +1238,7 @@
             gameOverText.textContent = `הגעת לשלב ${state.level} | ניקוד: ${state.score} ⭐`;
             gameOverScreen.style.display = 'flex';
             pauseBtn.style.display = 'none';
+            exitBtn.style.display = 'none';
             pauseOverlay.classList.remove('visible');
 
             // Submit score to parent Next.js app via postMessage
@@ -1244,6 +1261,25 @@
             } else if (prevBest > 0) {
                 gameOverText.textContent += ` | שיא: ${prevBest} ⭐`;
             }
+        }
+
+        function showExitGame() {
+            state.timerActive = false;
+            state.paused = false;
+            state.totalTimeSpent += state.currentLevelTimeLimit - state.timeRemaining;
+            localStorage.removeItem('tongue_saved_game');
+            pauseBtn.style.display = 'none';
+            exitBtn.style.display = 'none';
+            pauseOverlay.classList.remove('visible');
+            const playerName = (playerNameInput && playerNameInput.value.trim()) || 'אנונימי';
+            console.log('[Game] EXIT_GAME triggered for', playerName);
+            window.parent.postMessage({
+                type: 'EXIT_GAME',
+                player_name: playerName,
+                score: state.score,
+                max_level: state.level,
+                time_spent: Math.round(state.totalTimeSpent),
+            }, '*');
         }
 
         // ===== RAYCASTER =====
