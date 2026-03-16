@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { getLeaderboard, getLeaderboardByLevel, ScoreEntry } from './actions'
+import { getLeaderboard, getLeaderboardByLevel, getLeaderboardByFastest, ScoreEntry } from './actions'
 
 type Tab = 'score' | 'fastest' | 'level'
 
@@ -20,7 +20,10 @@ export default function Leaderboard() {
   function openLeaderboard(tab: Tab = 'score') {
     setActiveTab(tab)
     startTransition(async () => {
-      const data = tab === 'level' ? await getLeaderboardByLevel() : await getLeaderboard()
+      const data =
+        tab === 'level'   ? await getLeaderboardByLevel() :
+        tab === 'fastest' ? await getLeaderboardByFastest() :
+                            await getLeaderboard()
       setScores(data)
       setOpen(true)
     })
@@ -29,7 +32,10 @@ export default function Leaderboard() {
   function switchTab(tab: Tab) {
     setActiveTab(tab)
     startTransition(async () => {
-      const data = tab === 'level' ? await getLeaderboardByLevel() : await getLeaderboard()
+      const data =
+        tab === 'level'   ? await getLeaderboardByLevel() :
+        tab === 'fastest' ? await getLeaderboardByFastest() :
+                            await getLeaderboard()
       setScores(data)
     })
   }
