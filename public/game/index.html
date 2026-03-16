@@ -760,6 +760,8 @@
             timeRemaining: 0,
             timerActive: false,
             paused: false,
+            totalTimeSpent: 0,
+            currentLevelTimeLimit: 0,
         };
 
         // ===== THREE.JS SETUP =====
@@ -1183,6 +1185,7 @@
             state.levelTotalObjects = toyCount;
             state.levelCaughtObjects = 0;
             state.timeRemaining = timeLimit;
+            state.currentLevelTimeLimit = timeLimit;
             state.timerActive = true;
             state.started = true;
 
@@ -1199,6 +1202,7 @@
 
         // ===== LEVEL COMPLETE =====
         function showLevelComplete() {
+            state.totalTimeSpent += state.currentLevelTimeLimit - state.timeRemaining;
             state.timerActive = false;
             state.paused = false;
             targetWordEl.classList.remove('visible');
@@ -1221,12 +1225,14 @@
             pauseOverlay.classList.remove('visible');
 
             // Submit score to parent Next.js app via postMessage
+            state.totalTimeSpent += state.currentLevelTimeLimit - state.timeRemaining;
             const playerName = (playerNameInput && playerNameInput.value.trim()) || 'אנונימי';
             window.parent.postMessage({
                 type: 'GAME_OVER',
                 player_name: playerName,
                 score: state.score,
                 max_level: state.level,
+                time_spent: Math.round(state.totalTimeSpent),
             }, '*');
 
             // Save personal best to localStorage
@@ -1537,11 +1543,13 @@
         restartBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             state.score = 0;
+            state.totalTimeSpent = 0;
             scoreEl.textContent = '0 ⭐';
             startLevel(1);
         });
         gameOverScreen.addEventListener('click', () => {
             state.score = 0;
+            state.totalTimeSpent = 0;
             scoreEl.textContent = '0 ⭐';
             startLevel(1);
         });
