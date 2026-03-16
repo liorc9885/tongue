@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { submitScore } from './actions'
 
 interface GameOverMessage {
-  type: 'GAME_OVER'
+  type: 'GAME_OVER' | 'EXIT_GAME'
   player_name: string
   score: number
   max_level: number
@@ -14,9 +14,9 @@ interface GameOverMessage {
 export default function GameWrapper() {
   useEffect(() => {
     const handleMessage = async (e: MessageEvent<GameOverMessage>) => {
-      if (e.data?.type === 'GAME_OVER') {
-        const { player_name, score, max_level, time_spent } = e.data
-        console.log('[GameWrapper] GAME_OVER received:', { player_name, score, max_level, time_spent })
+      if (e.data?.type === 'GAME_OVER' || e.data?.type === 'EXIT_GAME') {
+        const { type, player_name, score, max_level, time_spent } = e.data
+        console.log(`[GameWrapper] ${type} received:`, { player_name, score, max_level, time_spent })
         if (player_name && score >= 0 && max_level >= 1) {
           console.log('[GameWrapper] Submitting score...')
           try {
