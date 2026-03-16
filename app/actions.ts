@@ -12,10 +12,10 @@ export async function submitScore(data: Omit<ScoreEntry, 'created_at'>): Promise
   console.log('[submitScore] called with:', JSON.stringify(data))
 
   const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_KEY
+  const supabaseKey = process.env.SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('[submitScore] Missing Supabase environment variables. SUPABASE_URL set:', !!supabaseUrl, 'SUPABASE_KEY set:', !!supabaseKey)
+    console.error('[submitScore] Missing Supabase environment variables. SUPABASE_URL set:', !!supabaseUrl, 'SUPABASE_ANON_KEY set:', !!supabaseKey)
     throw new Error('Missing Supabase environment variables')
   }
 
@@ -43,7 +43,7 @@ export async function submitScore(data: Omit<ScoreEntry, 'created_at'>): Promise
 
 export async function getLeaderboard(): Promise<ScoreEntry[]> {
   const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_KEY
+  const supabaseKey = process.env.SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return []
@@ -66,7 +66,7 @@ export async function getLeaderboard(): Promise<ScoreEntry[]> {
 
 export async function getLeaderboardByLevel(): Promise<ScoreEntry[]> {
   const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_KEY
+  const supabaseKey = process.env.SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return []
